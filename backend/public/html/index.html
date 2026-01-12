@@ -1,0 +1,2042 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cableworld — Dashboard</title>
+  <meta name="description" content="Dashboard profesional para agentes de Cableworld: manuales, tutoriales, soporte técnico y gestión de conocimiento.">
+  <meta name="theme-color" content="#ff7a00">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='0' y='14' font-size='14' fill='%23ff7a00'>⚙️</text></svg>" type="image/svg+xml">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/kb-manager-redesign.css">
+  <link rel="stylesheet" href="../css/manuals-redesign.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Libraries must load BEFORE app.js -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    // Verify libraries loaded
+    console.log('🔍 Checking libraries...');
+    console.log('DOMPurify:', typeof DOMPurify !== 'undefined' ? '✅ Cargado' : '❌ Sin Cargar');
+    console.log('QRCode:', typeof QRCode !== 'undefined' ? '✅ Cargado' : '❌ Sin Cargar');
+    console.log('jsPDF:', typeof jsPDF !== 'undefined' ? '✅ Cargado' : '❌ Sin Cargar');
+    console.log('pdfjsLib:', typeof pdfjsLib !== 'undefined' ? '✅ Cargado' : '❌ Sin Cargar');
+    
+    // Make jsPDF available globally if it loaded under a different name
+    if (typeof window.jsPDF === 'undefined' && typeof jspdf !== 'undefined') {
+      window.jsPDF = jspdf.jsPDF;
+      console.log('ℹ️ jsPDF remapped to window.jsPDF');
+    }
+    
+    // Configure pdf.js worker
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    
+    // Service Worker registration removed (offline mode not needed)
+  </script>
+  <script src="../js/sanitizer.js"></script>
+</head>
+<body class="cw-root">
+  <!-- FASE 2: Skip to main content link (accesibilidad) -->
+  <a href="#content" class="skip-to-main">Saltar al contenido principal</a>
+  
+  <div class="app" id="app">
+    <aside class="sidebar hidden" role="navigation" aria-label="Navegación principal">
+      <div class="brand">
+        <h1 class="brand-name">Cableworld Dashboard</h1>
+      </div>
+      <nav class="nav" aria-label="Navegación principal">
+        <ul>
+          <li><button data-nav="dashboard" class="active" aria-current="page">Dashboard</button></li>
+          <li><button data-nav="manuals">Manuales</button></li>
+          <li><button data-nav="fibra">Diagramas</button></li>
+          <li><button data-nav="history">Historial</button></li>
+          <li><button data-nav="faqs">FAQs y Tips</button></li>
+          <li><button data-nav="settings">Ajustes</button></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main hidden" role="main">
+      <header class="topbar">
+        <div class="search-wrap">
+          <label for="search" class="visually-hidden">Buscar manuales</label>
+          <input id="search" type="search" placeholder="Buscar manuales, códigos de error, soluciones..." aria-label="Buscar manuales" autocomplete="off">
+          <div id="autocomplete" class="autocomplete" role="listbox" aria-label="Sugerencias de búsqueda"></div>
+        </div>
+        <div class="top-actions">
+          <button id="notificationsBtn" class="icon-btn" aria-label="Notificaciones" title="Notificaciones">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 17H9v-6a6 6 0 1 1 12 0v6h-6z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            <span id="notifCount" class="badge hidden">0</span>
+          </button>
+          <button id="helpBtn" class="icon-btn" aria-label="Ayuda rápida" title="Ayuda y atajos">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.4"></circle></svg>
+          </button>
+          <div class="divider"></div>
+          <button id="toggleAgentMode" class="agent-toggle" title="Alternar modo agente">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></circle></svg>
+            <span>Modo agente</span>
+          </button>
+          <button id="logoutBtn" class="icon-btn" aria-label="Cerrar sesión" title="Cerrar sesión o cambiar cuenta">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5m14 0l-4-4m4 4l-4 4M19 6H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Loading Spinner Global -->
+      <div id="loadingSpinner" class="loading-spinner hidden" aria-live="polite" aria-busy="false">
+        <div class="spinner"></div>
+        <p id="loadingText">Cargando...</p>
+      </div>
+
+      <section class="content" id="content" aria-live="polite">
+        <div class="canvas" id="canvas">
+          <!-- Panel de descripción general del panel de control -->
+          <!-- Dashboard solo contiene los atajos y análisis (ahora en welcome) -->
+
+
+          <article id="welcome" class="panel">
+            <div class="welcome-header">
+              <h2>Bienvenido al Dashboard de Cableworld</h2>
+              <p class="subtitle">Centro integral de conocimiento para agentes de soporte técnico</p>
+            </div>
+            <div class="welcome-grid">
+              <div class="welcome-card">
+                <div class="card-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 19.5h16M6.5 3h11a2.5 2.5 0 0 1 2.5 2.5v10a2.5 2.5 0 0 1-2.5 2.5h-11a2.5 2.5 0 0 1-2.5-2.5v-10a2.5 2.5 0 0 1 2.5-2.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <h3>Manuales</h3>
+                <p>Accede a guías paso-a-paso, configuraciones técnicas y soluciones probadas.</p>
+                <button class="small-btn" data-nav="manuals">Explorar</button>
+              </div>
+              <div class="welcome-card">
+                <div class="card-icon accent">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="1" fill="currentColor"></circle><circle cx="19" cy="12" r="1" fill="currentColor"></circle><circle cx="5" cy="12" r="1" fill="currentColor"></circle></svg>
+                </div>
+                <h3>Árboles Fibra</h3>
+                <p>Herramientas interactivas de troubleshooting para diagnósticos rápidos.</p>
+                <button class="small-btn" data-nav="fibra">Ver árboles</button>
+              </div>
+              <div class="welcome-card">
+                <div class="card-icon secondary">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"></circle><path d="M12 8v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+                </div>
+                <h3>Historial</h3>
+                <p>Accede rápidamente a los manuales y árboles que has consultado recientemente.</p>
+                <button class="small-btn" data-nav="history">Ver historial</button>
+              </div>
+              <div class="welcome-card">
+                <div class="card-icon" style="background:linear-gradient(135deg, var(--cw-warning), #f59e0b)">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="1" fill="currentColor"></circle><circle cx="19" cy="12" r="1" fill="currentColor"></circle><circle cx="5" cy="12" r="1" fill="currentColor"></circle></svg>
+                </div>
+                <h3>FAQs</h3>
+                <p>Respuestas rápidas a preguntas frecuentes y tips de atención al cliente.</p>
+                <button class="small-btn" data-nav="faqs">Ver FAQs</button>
+              </div>
+              <div class="welcome-card">
+                <div class="card-icon" style="background:linear-gradient(135deg, #a78bfa, #8b5cf6)">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m-5.08-5.08l-4.24-4.24M19.78 19.78l-4.24-4.24m-5.08-5.08l-4.24-4.24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <h3>Buscar</h3>
+                <p>Herramientas avanzadas de búsqueda con filtros y sugerencias inteligentes.</p>
+                <button class="small-btn" id="goToSearchBtn">Buscar</button>
+              </div>
+              <div class="welcome-card">
+                <div class="card-icon" style="background:linear-gradient(135deg, #ec4899, #db2777)">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M10.5 1.5H3.75A2.25 2.25 0 0 0 1.5 3.75v16.5A2.25 2.25 0 0 0 3.75 22.5h16.5a2.25 2.25 0 0 0 2.25-2.25V13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M19.5 1.5h3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <h3>Configuración</h3>
+                <p>Personaliza tu experiencia, gestiona permisos y exporta datos.</p>
+                <button class="small-btn" data-nav="settings">Ir a ajustes</button>
+              </div>
+            </div>
+            <div class="quick-tips">
+              <h4>⌨️ Atajos útiles</h4>
+              <ul style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; list-style: none; padding: 0;">
+                <li style="display: flex; gap: 12px; padding: 12px; background: var(--cw-surface-alt); border-radius: 8px; border-left: 3px solid var(--cw-primary);">
+                  <kbd style="padding: 4px 8px; background: var(--cw-primary); color: white; border-radius: 4px; font-weight: 600; font-size: 11px; white-space: nowrap;">Alt + /</kbd>
+                  <span>Ir al buscador desde cualquier lugar</span>
+                </li>
+                <li style="display: flex; gap: 12px; padding: 12px; background: var(--cw-surface-alt); border-radius: 8px; border-left: 3px solid var(--cw-accent);">
+                  <kbd style="padding: 4px 8px; background: var(--cw-accent); color: white; border-radius: 4px; font-weight: 600; font-size: 11px; white-space: nowrap;">ESC</kbd>
+                  <span>Cerrar manual o volver a manuales</span>
+                </li>
+                <li style="display: flex; gap: 12px; padding: 12px; background: var(--cw-surface-alt); border-radius: 8px; border-left: 3px solid var(--cw-success);">
+                  <kbd style="padding: 4px 8px; background: var(--cw-success); color: white; border-radius: 4px; font-weight: 600; font-size: 11px; white-space: nowrap;">Alt + M</kbd>
+                  <span>Ir a Manuales rápidamente</span>
+                </li>
+                <li style="display: flex; gap: 12px; padding: 12px; background: var(--cw-surface-alt); border-radius: 8px; border-left: 3px solid var(--cw-warning);">
+                  <kbd style="padding: 4px 8px; background: var(--cw-warning); color: white; border-radius: 4px; font-weight: 600; font-size: 11px; white-space: nowrap;">Alt + ←</kbd>
+                  <span>Ir a Historial (atrás)</span>
+                </li>
+                <li style="display: flex; gap: 12px; padding: 12px; background: var(--cw-surface-alt); border-radius: 8px; border-left: 3px solid #8b5cf6;">
+                  <kbd style="padding: 4px 8px; background: #8b5cf6; color: white; border-radius: 4px; font-weight: 600; font-size: 11px; white-space: nowrap;">Enter</kbd>
+                  <span>Abrir tarjeta de manual seleccionada</span>
+                </li>
+                <li style="display: flex; gap: 12px; padding: 12px; background: var(--cw-surface-alt); border-radius: 8px; border-left: 3px solid #ec4899;">
+                  <kbd style="padding: 4px 8px; background: #ec4899; color: white; border-radius: 4px; font-weight: 600; font-size: 11px; white-space: nowrap;">Space</kbd>
+                  <span>Abrir tarjeta con teclado</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- FASE 4: Analytics Dashboard - Abajo de los atajos útiles -->
+            <div id="analyticsPanel" style="padding:20px;max-width:1200px;margin:0 auto">
+              <div class="dashboard-section">
+                <h3 style="margin-top:32px;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+                  <span style="font-size:20px">📊</span>
+                  Análisis de uso
+                </h3>
+                
+                <!-- GRÁFICOS PROFESIONALES DE ACTIVIDAD -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(500px, 1fr));gap:20px;margin-bottom:24px">
+                  <!-- Gráfico de actividad semanal -->
+                  <div style="padding:20px;background:var(--cw-surface);border-radius:12px;border:1px solid var(--cw-border);box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+                    <h4 style="margin:0 0 16px 0;font-size:14px;font-weight:600;color:var(--cw-text)">📈 Actividad últimos 7 días</h4>
+                    <canvas id="weeklyActivityChart" style="max-height:300px"></canvas>
+                  </div>
+                  
+                  <!-- Gráfico de actividad mensual -->
+                  <div style="padding:20px;background:var(--cw-surface);border-radius:12px;border:1px solid var(--cw-border);box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+                    <h4 style="margin:0 0 16px 0;font-size:14px;font-weight:600;color:var(--cw-text)">📊 Actividad últimos 30 días</h4>
+                    <canvas id="monthlyActivityChart" style="max-height:300px"></canvas>
+                  </div>
+                </div>
+
+                <!-- ESTADÍSTICAS DE BÚSQUEDA -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;margin-bottom:20px">
+                  <!-- Búsquedas populares -->
+                  <div style="padding:16px;background:var(--cw-surface);border-radius:12px;border:1px solid var(--cw-border)">
+                    <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:600;color:var(--cw-text)">🔍 Top 5 búsquedas</h4>
+                    <div id="topSearchesWidget" style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                      <p style="color:var(--cw-text-muted);margin:0">Aún sin datos de búsqueda</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Categorías más visitadas -->
+                  <div style="padding:16px;background:var(--cw-surface);border-radius:12px;border:1px solid var(--cw-border)">
+                    <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:600;color:var(--cw-text)">📚 Categorías populares</h4>
+                    <div id="topCategoriesWidget" style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                      <p style="color:var(--cw-text-muted);margin:0">Aún sin datos de vista</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Manuales más vistos -->
+                  <div style="padding:16px;background:var(--cw-surface);border-radius:12px;border:1px solid var(--cw-border)">
+                    <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:600;color:var(--cw-text)">⭐ Manuales top</h4>
+                    <div id="topManualsWidget" style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                      <p style="color:var(--cw-text-muted);margin:0">Aún sin datos de vista</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- MÉTRICAS CLAVE -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:12px;margin-top:16px">
+                  <div style="padding:16px;background:linear-gradient(135deg, #dbeafe, #bfdbfe);border-radius:8px;border-left:3px solid #0284c7">
+                    <div style="font-size:12px;color:#0c4a6e;font-weight:600;margin-bottom:6px">Búsquedas hoy</div>
+                    <div style="font-size:24px;font-weight:700;color:#0284c7" id="todaySearchesWidget">0</div>
+                    <div style="font-size:11px;color:#0c4a6e;margin-top:4px" id="searchTrendToday">-</div>
+                  </div>
+                  <div style="padding:16px;background:linear-gradient(135deg, #dcfce7, #bbf7d0);border-radius:8px;border-left:3px solid #16a34a">
+                    <div style="font-size:12px;color:#15803d;font-weight:600;margin-bottom:6px">Manuales consultados hoy</div>
+                    <div style="font-size:24px;font-weight:700;color:#16a34a" id="todayViewsWidget">0</div>
+                    <div style="font-size:11px;color:#15803d;margin-top:4px" id="viewTrendToday">-</div>
+                  </div>
+                  <div style="padding:16px;background:linear-gradient(135deg, #f3e8ff, #e9d5ff);border-radius:8px;border-left:3px solid #9333ea">
+                    <div style="font-size:12px;color:#6b21a8;font-weight:600;margin-bottom:6px">Promedio diario</div>
+                    <div style="font-size:24px;font-weight:700;color:#9333ea" id="avgDailyWidget">0</div>
+                    <div style="font-size:11px;color:#6b21a8;margin-top:4px">últimos 7 días</div>
+                  </div>
+                </div>
+
+                <!-- TIP DEL DÍA WIDGET -->
+                <div style="margin-top:24px;padding:20px;background:linear-gradient(135deg, #fef3c7, #fde68a);border-radius:12px;border:1px solid #fcd34d;border-left:4px solid #f59e0b">
+                  <div style="display:flex;justify-content:space-between;align-items:start;gap:12px">
+                    <div style="flex:1">
+                      <h4 style="margin:0 0 8px 0;font-size:14px;font-weight:600;color:#92400e">💡 Tip del Día</h4>
+                      <p id="tipOfDayContent" style="margin:0;font-size:13px;color:#78350f;line-height:1.5">Cargando tip del día...</p>
+                      <div style="font-size:11px;color:#92400e;margin-top:6px" id="tipOfDayDate"></div>
+                    </div>
+                    <button id="nextTipBtn" class="secondary small-btn" style="font-size:12px;padding:6px 12px;white-space:nowrap;flex-shrink:0">↻ Siguiente</button>
+                  </div>
+                </div>
+
+                <!-- KPIs DE SOPORTE -->
+                <div style="margin-top:24px">
+                  <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:600;color:var(--cw-text)">🎯 KPIs de Soporte</h4>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px">
+                    <div style="padding:16px;background:linear-gradient(135deg, #fecaca, #fca5a5);border-radius:8px;border-left:3px solid #dc2626">
+                      <div style="font-size:12px;color:#7f1d1d;font-weight:600;margin-bottom:6px">Resolución promedio</div>
+                      <div style="font-size:22px;font-weight:700;color:#dc2626" id="avgResolutionTimeWidget">0 seg</div>
+                      <div style="font-size:11px;color:#7f1d1d;margin-top:4px">Tiempo por búsqueda</div>
+                    </div>
+                    <div style="padding:16px;background:linear-gradient(135deg, #d1d5db, #e5e7eb);border-radius:8px;border-left:3px solid #6b7280">
+                      <div style="font-size:12px;color:#374151;font-weight:600;margin-bottom:6px">Eficiencia de búsqueda</div>
+                      <div style="font-size:22px;font-weight:700;color:#6b7280" id="searchEfficiencyWidget">0%</div>
+                      <div style="font-size:11px;color:#374151;margin-top:4px">Consultas resueltas</div>
+                    </div>
+                    <div style="padding:16px;background:linear-gradient(135deg, #bfdbfe, #93c5fd);border-radius:8px;border-left:3px solid #3b82f6">
+                      <div style="font-size:12px;color:#1e3a8a;font-weight:600;margin-bottom:6px">Satisfacción estimada</div>
+                      <div style="font-size:22px;font-weight:700;color:#3b82f6" id="estimatedSatisfactionWidget">0%</div>
+                      <div style="font-size:11px;color:#1e3a8a;margin-top:4px">Basado en patrones</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Botón limpiar analytics -->
+                <div style="margin-top:16px;display:flex;justify-content:flex-end">
+                  <button id="clearAnalyticsBtn" class="secondary small-btn" style="font-size:12px;padding:8px 14px">🗑️ Limpiar histórico</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article id="manualsListView" class="panel hidden">
+            <!-- Banner de encabezado premium -->
+            <div style="background:linear-gradient(135deg, #ff6b35 0%, #ff8a50 50%, #ffa366 100%);color:white;padding:40px;border-radius:16px;margin-bottom:40px;box-shadow:0 8px 24px rgba(255, 107, 53, 0.2)">
+              <h2 style="margin:0 0 12px 0;font-size:32px;font-weight:800;letter-spacing:-0.5px">📚 Manuales Técnicos</h2>
+              <p style="margin:0;font-size:15px;opacity:0.95;line-height:1.6">Tu biblioteca completa de soluciones paso a paso. Encuentra rápidamente cómo resolver cualquier problema técnico.</p>
+            </div>
+
+            <!-- Sección de filtro inteligente -->
+            <div style="background:var(--cw-surface);padding:28px;border-radius:14px;margin-bottom:40px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1px solid var(--cw-border)">
+              <div style="margin-bottom:16px">
+                <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--cw-text-muted)">Filtros avanzados</h4>
+              </div>
+              
+              <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+                <!-- Filtro de categoría -->
+                <select id="manualsCategoryFilter" style="padding:12px 14px;font-size:14px;height:44px;border-radius:10px;border:2px solid var(--cw-border);background:var(--cw-surface);color:var(--cw-text);cursor:pointer;font-family:var(--font-stack);min-width:220px;flex:1;min-width:240px;transition:all 0.3s ease;box-shadow:0 2px 4px rgba(0,0,0,0.04)">
+                  <option value="">🏷️ Categoría</option>
+                </select>
+                
+                <!-- Ordenamiento -->
+                <select id="manualsOrderFilter" style="padding:12px 14px;font-size:14px;height:44px;border-radius:10px;border:2px solid var(--cw-border);background:var(--cw-surface);color:var(--cw-text);cursor:pointer;font-family:var(--font-stack);min-width:220px;flex:1;transition:all 0.3s ease;box-shadow:0 2px 4px rgba(0,0,0,0.04)">
+                  <option value="recent">🕐 Más recientes</option>
+                  <option value="updated">📝 Recientemente actualizados</option>
+                  <option value="title-asc">📖 Título (A→Z)</option>
+                  <option value="title-desc">📖 Título (Z→A)</option>
+                </select>
+                
+                <!-- Botón crear nuevo manual -->
+                <button id="createManualBtn" data-admin style="padding:12px 28px;font-size:14px;height:44px;border-radius:10px;border:none;background:linear-gradient(135deg, #ff6b35 0%, #ff8a50 100%);color:white;cursor:pointer;font-weight:600;font-family:var(--font-stack);display:flex;align-items:center;gap:8px;white-space:nowrap;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(255, 107, 53, 0.2)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span>Nuevo</span>
+                </button>
+              </div>
+              
+              <!-- Estadísticas rápidas (opcional) -->
+              <div style="display:flex;gap:16px;padding-top:16px;border-top:1px solid var(--cw-border);font-size:12px;color:var(--cw-text-muted)">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#ff6b35"></span>
+                  <span id="totalManualsCount">0 manuales</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contenedor de cuadrícula de manuales -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 12px; background: var(--cw-surface); border-radius: 8px; border: 1px solid var(--cw-border);">
+              <div style="font-size: 14px; font-weight: 500; color: var(--cw-text);">Manuales disponibles</div>
+              <button id="manageCategoriesBtn" class="small-btn" style="background: linear-gradient(135deg, #fcd34d, #f59e0b); color: white; border: none; cursor: pointer; padding: 8px 16px; border-radius: 6px; font-weight: 500;" data-admin>📁 Gestionar categorías</button>
+            </div>
+
+            <!-- FASE 16: Árbol de carpetas (Knowledge Base Manager) -->
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-bottom: 40px;">
+              <div style="background: var(--cw-surface); border-radius: 12px; border: 1px solid var(--cw-border); overflow: hidden;">
+                <div style="padding: 16px; border-bottom: 1px solid var(--cw-border); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                  <h4 style="margin: 0; font-size: 14px; font-weight: 600;">📚 Base de Conocimiento</h4>
+                  <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Explora la estructura de manuales</p>
+                </div>
+                <div id="folderTreeView" style="max-height: 600px; overflow-y: auto;"></div>
+              </div>
+              <div id="folderContent" style="background: var(--cw-surface); border-radius: 12px; border: 1px solid var(--cw-border); padding: 24px;">
+                <p style="color: var(--cw-text-muted); text-align: center; margin: 0;">Selecciona una carpeta para ver sus manuales</p>
+              </div>
+            </div>
+            <div id="manualsList" role="list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(420px, 1fr));gap:28px;padding:0"></div>
+            
+            <!-- Estado vacío -->
+            <div id="noManualsMessage" style="display:none;text-align:center;padding:100px 40px;color:var(--cw-text-muted)">
+              <div style="font-size:80px;margin-bottom:24px;opacity:0.5">📭</div>
+              <h3 style="margin:0 0 12px 0;font-size:22px;font-weight:700">No hay manuales disponibles</h3>
+              <p style="margin:0;font-size:15px;opacity:0.8">Intenta ajustar los filtros de búsqueda o crea un nuevo manual</p>
+            </div>
+          </article>
+
+          <!-- Panel de diagramas Fibra -->
+          <article id="fibraView" class="panel hidden">
+            <!-- Premium Header Banner -->
+            <div style="background:linear-gradient(135deg, var(--cw-primary) 0%, var(--cw-secondary) 50%, var(--cw-primary-dark) 100%);color:white;padding:40px;border-radius:16px;margin-bottom:40px;box-shadow:0 8px 24px rgba(255, 128, 51, 0.2)">
+              <h2 style="margin:0 0 12px 0;font-size:32px;font-weight:800;letter-spacing:-0.5px">🌳 Árboles de Decisión</h2>
+              <p style="margin:0;font-size:15px;opacity:0.95;line-height:1.6">Diagramas interactivos para diagnóstico y troubleshooting. Crea árboles de decisión para guiar el proceso de resolución de problemas.</p>
+            </div>
+
+            <!-- Sección de control -->
+            <div style="background:var(--cw-surface);padding:28px;border-radius:14px;margin-bottom:40px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1px solid var(--cw-border)">
+              <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+                <!-- Botón crear -->
+                <button id="createDiagramBtn" data-admin style="padding:12px 28px;font-size:14px;height:44px;border-radius:10px;border:none;background:linear-gradient(135deg, var(--cw-primary), var(--cw-secondary));color:white;cursor:pointer;font-weight:600;font-family:var(--font-stack);display:flex;align-items:center;gap:8px;white-space:nowrap;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(255, 128, 51, 0.2)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span>Nuevo árbol</span>
+                </button>
+                
+                <!-- Filtros por categoría -->
+                <select id="filterDiagramCategory" style="padding:12px 14px;border:1px solid var(--cw-border);border-radius:10px;background:var(--cw-surface-alt);color:var(--cw-text);font-weight:600;cursor:pointer;font-family:var(--font-stack);transition:all 0.3s ease" title="Filtrar por tipo de red">
+                  <option value="">Todas las redes</option>
+                  <option value="GPON">🌐 GPON</option>
+                  <option value="Aire">📡 Aire</option>
+                </select>
+                
+                <select id="filterDiagramSubcategory" style="padding:12px 14px;border:1px solid var(--cw-border);border-radius:10px;background:var(--cw-surface-alt);color:var(--cw-text);font-weight:600;cursor:pointer;font-family:var(--font-stack);transition:all 0.3s ease" title="Filtrar por servicio">
+                  <option value="">Todos los servicios</option>
+                  <option value="Internet">🌍 Internet</option>
+                  <option value="Telefonía">☎️ Telefonía</option>
+                </select>
+              </div>
+
+              <!-- Estadísticas -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px">
+                <div style="background:linear-gradient(135deg, rgba(255, 128, 51, 0.1), rgba(255, 160, 80, 0.1));padding:16px;border-radius:10px;border:1px solid rgba(255, 128, 51, 0.2)">
+                  <div style="font-size:24px;font-weight:700;color:var(--cw-primary)" id="diagramsCount">0</div>
+                  <div style="font-size:12px;color:var(--cw-text-muted);margin-top:4px">Árboles creados</div>
+                </div>
+                <div style="background:linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));padding:16px;border-radius:10px;border:1px solid rgba(16, 185, 129, 0.2)">
+                  <div style="font-size:16px;font-weight:700;color:#10b981" id="gponInternetCount">0</div>
+                  <div style="font-size:12px;color:var(--cw-text-muted);margin-top:4px">🌐 GPON Internet</div>
+                </div>
+                <div style="background:linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(109, 40, 217, 0.1));padding:16px;border-radius:10px;border:1px solid rgba(139, 92, 246, 0.2)">
+                  <div style="font-size:16px;font-weight:700;color:#7c3aed" id="gponTelCount">0</div>
+                  <div style="font-size:12px;color:var(--cw-text-muted);margin-top:4px">☎️ GPON Telefonía</div>
+                </div>
+                <div style="background:linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));padding:16px;border-radius:10px;border:1px solid rgba(59, 130, 246, 0.3)">
+                  <div style="font-size:16px;font-weight:700;color:#2563eb" id="aireInternetCount">0</div>
+                  <div style="font-size:12px;color:var(--cw-text-muted);margin-top:4px">📡 Aire Internet</div>
+                </div>
+                <div style="background:linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(190, 24, 93, 0.1));padding:16px;border-radius:10px;border:1px solid rgba(236, 72, 153, 0.2)">
+                  <div style="font-size:16px;font-weight:700;color:#ec4899" id="aireTelCount">0</div>
+                  <div style="font-size:12px;color:var(--cw-text-muted);margin-top:4px">📡 Aire Telefonía</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cuadrícula de diagramas -->
+            <div id="diagramsList" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:20px"></div>
+          </article>
+
+          <!-- Modal de editor de diagrama -->
+          <div id="diagramModal" class="modal hidden">
+            <div class="modal-content" style="max-width:1000px;max-height:90vh;overflow-y:auto">
+              <button class="close" data-close aria-label="Cerrar">✕</button>
+              <h4 style="margin-bottom:24px;display:flex;align-items:center;gap:10px">
+                <span style="font-size:24px">🌳</span>
+                Diseñador de Árbol de Decisiones
+              </h4>
+              
+              <div style="display:flex;flex-direction:column;gap:20px">
+                <!-- Título, categorías y estadísticas -->
+                <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:20px">
+                  <div>
+                    <label style="display:block;margin-bottom:8px;font-weight:600;font-size:14px">Nombre del diagrama</label>
+                    <input id="diagramTitle" type="text" class="input-field" placeholder="Ej: Fibra sin conexión" required style="font-size:16px;padding:12px">
+                  </div>
+                  
+                  <!-- Selector Jerárquico de Categorías -->
+                  <div style="display:flex;flex-direction:column;gap:12px">
+                    <div>
+                      <label style="display:block;margin-bottom:8px;font-weight:600;font-size:14px">Tipo de Red</label>
+                      <select id="categoryParent" class="input-field" style="font-size:14px;padding:12px;border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-surface);cursor:pointer">
+                        <option value="GPON">🌐 GPON</option>
+                        <option value="Aire">📡 Aire</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div style="display:flex;flex-direction:column;gap:12px">
+                    <div>
+                      <label style="display:block;margin-bottom:8px;font-weight:600;font-size:14px">Servicio</label>
+                      <select id="categorySubcategory" class="input-field" style="font-size:14px;padding:12px;border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-surface);cursor:pointer">
+                        <option value="Internet">🌍 Internet</option>
+                        <option value="Telefonía">☎️ Telefonía</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div id="treeStats" class="tree-stats" style="align-self:flex-end;display:grid;grid-template-columns:1fr 1fr;gap:12px;width:auto">
+                    <div class="stat-card">
+                      <div class="stat-card-value" id="nodeCount">0</div>
+                      <div class="stat-card-label">NODOS</div>
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-card-value" id="solutionCount">0</div>
+                      <div class="stat-card-label">SOLUCIONES</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Editor de estructura de árbol con visualización de profundidad -->
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <h5 style="margin:0;font-size:13px;font-weight:700;text-transform:uppercase;color:var(--cw-text-muted);letter-spacing:1px">Estructura del árbol</h5>
+                    <span id="treeDepth" style="font-size:12px;color:var(--cw-text-muted)">Profundidad máx: 0</span>
+                  </div>
+                  <div id="diagramNodeEditor" style="border:2px solid var(--cw-border);border-radius:12px;padding:16px;background:var(--cw-surface);max-height:450px;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>
+                </div>
+                
+                <!-- Node tools -->
+                <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--cw-border)">
+                  <button id="addNodeBtn" type="button" class="small-btn" style="background:linear-gradient(135deg, var(--cw-success, #10b981), #059669);color:white;border:none;cursor:pointer;border-radius:8px;padding:10px 16px;font-weight:600;gap:6px;display:flex;align-items:center">
+                    <span style="font-size:16px">+</span> Añadir nodo
+                  </button>
+                  <div style="display:flex;gap:12px;margin-left:auto">
+                    <button id="saveDiagramBtn" type="button" class="primary small-btn" style="background:linear-gradient(135deg, var(--cw-primary), var(--cw-secondary));border:none;color:white;font-weight:600;padding:10px 20px;border-radius:8px">
+                      💾 Guardar
+                    </button>
+                    <button id="deleteDiagramBtn" type="button" class="secondary small-btn" style="display:none;background:var(--cw-danger);color:white;border:none;padding:10px 16px;border-radius:8px;font-weight:600">
+                      🗑 Eliminar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal de editor de nodo - Editor de texto profesional -->
+          <div id="nodeEditorModal" class="modal hidden">
+            <div class="modal-content" style="max-width:700px">
+              <button class="close" data-close aria-label="Cerrar">✕</button>
+              <h4 style="margin-bottom:20px">Editar Nodo</h4>
+              
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <!-- Selección de tipo de nodo -->
+                <div style="display:flex;gap:12px">
+                  <label style="display:flex;align-items:center;gap:8px;flex:1;padding:12px;background:var(--cw-surface-alt);border:2px solid #e2e8f0;border-radius:8px;cursor:pointer" id="typeQuestionLabel">
+                    <input type="radio" name="nodeType" value="question" checked style="cursor:pointer">
+                    <span style="font-weight:600">❓ Pregunta</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;flex:1;padding:12px;background:var(--cw-surface-alt);border:2px solid #e2e8f0;border-radius:8px;cursor:pointer" id="typeSolutionLabel">
+                    <input type="radio" name="nodeType" value="solution" style="cursor:pointer">
+                    <span style="font-weight:600">✓ Solución</span>
+                  </label>
+                </div>
+                
+                <!-- Editor de texto -->
+                <div>
+                  <label style="display:block;margin-bottom:8px;font-weight:600;font-size:14px">Contenido del nodo</label>
+                  <textarea id="nodeEditorText" class="input-field" placeholder="Escribe el contenido aquí..." style="min-height:150px;font-family:inherit;resize:vertical;padding:12px;font-size:14px"></textarea>
+                  <small style="display:block;margin-top:6px;color:var(--cw-text-muted)">💡 Tip: Para soluciones, usa saltos de línea para pasos. Ej: ✓ Paso 1\n✓ Paso 2</small>
+                </div>
+                
+                <!-- Editor de imagen -->
+                <div style="padding:12px;background:linear-gradient(135deg, #f0f9ff, #e0f2fe);border:2px dashed #0284c7;border-radius:8px">
+                  <label style="display:block;margin-bottom:8px;font-weight:600;font-size:14px">📸 Imagen (Opcional)</label>
+                  <div id="nodeImagePreview" style="display:none;margin-bottom:12px;border-radius:8px;overflow:hidden;background:white;padding:8px">
+                    <img id="nodeImagePreviewImg" style="max-width:100%;max-height:200px;display:block" alt="Preview">
+                    <button id="nodeImageRemoveBtn" type="button" style="margin-top:8px;padding:6px 12px;background:#ef4444;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;width:100%">🗑 Eliminar imagen</button>
+                  </div>
+                  <input id="nodeImageInput" type="file" accept="image/*" style="display:none">
+                  <button id="nodeImageUploadBtn" type="button" style="width:100%;padding:12px;background:white;border:2px solid #0284c7;border-radius:6px;cursor:pointer;font-weight:600;color:#0284c7;transition:all 0.2s">
+                    📁 Seleccionar imagen
+                  </button>
+                  <small style="display:block;margin-top:6px;color:var(--cw-text-muted);text-align:center">Formatos: JPG, PNG, GIF. Máx 5MB</small>
+                </div>
+                
+                <!-- Opciones para preguntas -->
+                <div id="optionsSection" style="display:none;padding:12px;background:var(--cw-surface-alt);border-radius:8px">
+                  <label style="display:block;margin-bottom:12px;font-weight:600;font-size:13px;text-transform:uppercase;color:var(--cw-text-muted)">Opciones</label>
+                  <div id="optionsList" style="display:flex;flex-direction:column;gap:8px"></div>
+                  <button id="addOptionBtn" type="button" style="margin-top:12px;padding:8px 12px;background:var(--cw-primary);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">+ Añadir opción</button>
+                </div>
+                
+                <!-- Actions -->
+                <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:12px;border-top:1px solid var(--cw-border)">
+                  <button id="nodeEditorCancelBtn" class="secondary small-btn" data-close>Cancelar</button>
+                  <button id="nodeEditorSaveBtn" class="primary small-btn">💾 Guardar cambios</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal añadir nodo - Selector de tipo profesional -->
+          <div id="addNodeModal" class="modal hidden">
+            <div class="modal-content" style="max-width:500px">
+              <button class="close" data-close aria-label="Cerrar">✕</button>
+              <h4 style="margin-bottom:24px;text-align:center">Crear Nuevo Nodo</h4>
+              
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+                <!-- Pregunta Option -->
+                <div id="addNodeQuestionOption" style="padding:24px;background:linear-gradient(135deg, #fef3c7, #fef9e7);border:3px solid #f59e0b;border-radius:12px;cursor:pointer;text-align:center;transition:all 0.3s;user-select:none" data-type="question">
+                  <div style="font-size:48px;margin-bottom:12px">❓</div>
+                  <h5 style="margin:0 0 8px;color:#92400e;font-weight:700">Pregunta</h5>
+                  <p style="margin:0;font-size:13px;color:#b45309">Con múltiples opciones</p>
+                </div>
+                
+                <!-- Solución Option -->
+                <div id="addNodeSolutionOption" style="padding:24px;background:linear-gradient(135deg, #dcfce7, #f0fdf4);border:3px solid #10b981;border-radius:12px;cursor:pointer;text-align:center;transition:all 0.3s;user-select:none" data-type="solution">
+                  <div style="font-size:48px;margin-bottom:12px">✓</div>
+                  <h5 style="margin:0 0 8px;color:#15803d;font-weight:700">Solución</h5>
+                  <p style="margin:0;font-size:13px;color:#4d7c0f">Punto final del árbol</p>
+                </div>
+              </div>
+              
+              <p style="text-align:center;color:var(--cw-text-muted);font-size:13px;margin-bottom:0">Selecciona el tipo de nodo que deseas crear</p>
+            </div>
+          </div>
+
+          <!-- Modal visor de diagrama interactivo -->
+          <div id="diagramViewerModal" class="modal hidden">
+            <div class="modal-content" style="max-width:800px;max-height:90vh;overflow-y:auto">
+              <button class="close" aria-label="Cerrar">✕</button>
+              
+              <div class="decision-tree-container">
+                <!-- Header -->
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:2px solid var(--cw-border);padding-bottom:16px">
+                  <div>
+                    <h4 id="viewerDiagramTitle" style="margin:0 0 8px 0;font-size:24px;font-weight:700">Troubleshooting</h4>
+                    <div class="tree-breadcrumb" id="diagramViewerPath" style="margin:0;background:transparent;padding:0"></div>
+                  </div>
+                  <div class="tree-progress">
+                    <span id="currentDepthDisplay" style="font-size:14px;color:var(--cw-text-muted)">Nivel 1</span>
+                  </div>
+                </div>
+                
+                <!-- Contenido -->
+                <div style="display:flex;flex-direction:column;gap:20px">
+                  <!-- Question -->
+                  <div id="diagramViewerQuestion" class="tree-question-box" style="display:none">
+                    <h3 id="questionText">¿Pregunta?</h3>
+                    <div class="tree-depth-indicator" id="depthIndicator"></div>
+                  </div>
+                  
+                  <!-- Options -->
+                  <div id="diagramViewerOptions" class="tree-options" style="min-height:80px"></div>
+                  
+                  <!-- Solution -->
+                  <div id="diagramViewerSolution" class="tree-solution-box" style="display:none">
+                    <h3 id="solutionTitle">Solución encontrada</h3>
+                    <p id="solutionText"></p>
+                  </div>
+                </div>
+                
+                <!-- Navigation -->
+                <div class="tree-navigation">
+                  <button id="diagramViewerRestartBtn" class="tree-nav-btn" style="display:none;background:var(--cw-primary);color:white;border:none;font-weight:600">
+                    ↻ Volver al inicio
+                  </button>
+                  <button id="diagramViewerBackBtn" class="tree-nav-btn" style="display:none;margin-left:auto">
+                    ← Retroceder
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <article id="manualView" class="panel hidden" aria-live="polite" role="main">
+            <header class="manual-header">
+              <div class="header-top">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <button id="backToManualsBtn" class="icon-btn" title="Volver a manuales" aria-label="Volver a manuales">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </button>
+                  <h1 id="manualTitle">Título del manual</h1>
+                </div>
+                <div class="manual-actions">
+                      <button id="qrBtn" class="icon-btn" title="Abrir en móvil" aria-label="Abrir en móvil">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.2"></rect><rect x="13" y="13" width="8" height="8" stroke="currentColor" stroke-width="1.2"></rect><rect x="13" y="3" width="4" height="4" stroke="currentColor" stroke-width="1.2"></rect></svg>
+                  </button>
+                      <button id="exportManualBtn" class="icon-btn" title="Exportar a PDF" aria-label="Exportar a PDF">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v11m0 0l3-3m-3 3l-3-3M4 14h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                      </button>
+                      <button id="shareManualBtn" class="icon-btn" title="Compartir manual" aria-label="Compartir manual">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M12 2v10m0 0l3-3m-3 3l-3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                      </button>
+                      <button id="emailManualBtn" class="icon-btn" title="Enviar por email" aria-label="Enviar por email">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M3 8v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                      </button>
+                      <button id="editManualBtn" class="icon-btn" data-admin title="Editar manual" aria-label="Editar manual">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 21v-3.75L14.06 6.19a2.12 2.12 0 0 1 3 0l0 0a2.12 2.12 0 0 1 0 3L6 20.25H3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                      </button>
+                </div>
+              </div>
+              <div class="manual-meta">
+                <span class="meta-tag"><span class="meta-label">Categoría:</span> <span id="manualCategory"></span></span>
+                <span class="meta-tag"><span class="meta-label">Versión:</span> <span id="manualVersion"></span></span>
+              </div>
+            </header>
+
+            <!-- FASE 1: Manual Tabs -->
+            <div class="manual-tabs" role="tablist">
+              <button class="manual-tab-btn active" data-tab="steps" title="Ver pasos" role="tab" aria-selected="true" aria-controls="steps-pane">
+                <span>📖 Pasos</span>
+              </button>
+              <button class="manual-tab-btn" data-tab="comments" title="Ver comentarios" role="tab" aria-selected="false" aria-controls="comments-pane">
+                <span>💬 Comentarios</span>
+              </button>
+              <button class="manual-tab-btn" data-tab="versions" title="Ver historial" role="tab" aria-selected="false" aria-controls="versions-pane">
+                <span>📜 Historial</span>
+              </button>
+            </div>
+
+            <div class="manual-tab-pane active" id="steps-pane" role="tabpanel" aria-labelledby="steps-tab">
+              <section id="manualSteps" class="steps">
+              <!-- Pasos rellenados por JS -->
+            </section>
+            </div>
+
+            <div class="manual-tab-pane" id="comments-pane" role="tabpanel" aria-labelledby="comments-tab">
+              <section id="manualComments" class="comments" aria-label="Comentarios internos">
+              <h4>Comentarios internos</h4>
+              <div id="commentsList" class="comments-list"></div>
+              <div class="comment-input-group">
+                <textarea id="commentInput" placeholder="Añadir comentario..." maxlength="500"></textarea>
+                <button id="addComment" class="primary">Enviar</button>
+              </div>
+            </section>
+            </div>
+
+            <div class="manual-tab-pane" id="versions-pane" role="tabpanel" aria-labelledby="versions-tab">
+              <section id="versionsSection" class="versions" aria-label="Historial de versiones">
+              <h4>Historial de versiones</h4>
+              <div id="versionsList" class="versions-list"></div>
+            </section>
+            </div>
+
+            <!-- FASE 3: Manuales relacionados -->
+            <section id="relatedManualsSection" class="related-manuals" style="margin-top:24px;padding-top:24px;border-top:1px solid var(--cw-border);display:none">
+              <h3 style="margin-bottom:16px;font-size:18px;font-weight:600">📚 Manuales relacionados</h3>
+              <div id="relatedManualsList" class="manuals-grid" role="list">
+                <!-- Rellenado por JS -->
+              </div>
+            </section>
+
+          </article>
+
+          <article id="historyView" class="panel hidden">
+            <div class="panel-header">
+              <h3>Historial</h3>
+              <p class="subtitle">Manuales que has consultado recientemente.</p>
+            </div>
+            <div id="historyList" class="history-list">
+              <p class="empty-state">No hay historial aún. Los manuales que consultes aparecerán aquí.</p>
+            </div>
+          </article>
+
+          <article id="faqsView" class="panel hidden">
+            <div class="panel-header">
+              <h3>FAQs y Tips</h3>
+              <p class="subtitle">Respuestas rápidas a preguntas frecuentes de clientes y agentes.</p>
+            </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+                <div style="color:var(--cw-text-muted);">Consejos rápidos y preguntas frecuentes para agentes.</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button id="createFaqBtn" class="primary small-btn" data-admin title="Crear nueva FAQ">+ Crear FAQ</button>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+                <input id="faqSearch" class="input-field" placeholder="Buscar FAQ por pregunta o respuesta..." style="flex:1">
+                <button id="clearFaqSearch" class="secondary" title="Limpiar búsqueda">Limpiar</button>
+              </div>
+              <div id="faqsList" class="faqs-list"></div>
+          </article>
+
+          <article id="settingsView" class="panel hidden">
+            <div class="panel-header">
+              <h3>⚙️ Ajustes y Configuración</h3>
+              <p class="subtitle">Personaliza tu experiencia en el dashboard de Cableworld.</p>
+            </div>
+            
+            <div class="settings-grid">
+              <!-- TEMA Y APARIENCIA -->
+              <section class="settings-section">
+                <h4>🎨 Tema y Apariencia</h4>
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <label for="themeDark">Modo oscuro</label>
+                    <small>Usa colores oscuros para reducir fatiga visual</small>
+                  </div>
+                  <input type="checkbox" id="themeDark" class="toggle-switch" title="Activar tema oscuro">
+                </div>
+              </section>
+
+              <!-- NOTIFICACIONES -->
+              <section class="settings-section">
+                <h4>🔔 Notificaciones</h4>
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <label for="notifEnabled">Habilitar notificaciones</label>
+                    <small>Recibe alertas de actualizaciones y cambios importantes</small>
+                  </div>
+                  <input type="checkbox" id="notifEnabled" class="toggle-switch" checked title="Notificaciones habilitadas">
+                </div>
+              </section>
+
+              <!-- PERFIL Y USUARIO -->
+              <section class="settings-section">
+                <h4>👤 Perfil de Usuario</h4>
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <label>Nombre de usuario</label>
+                    <small>Tu nombre tal como lo definió el administrador</small>
+                  </div>
+                  <span id="profileNameDisplay" style="color:var(--cw-text);font-size:14px;font-weight:600">—</span>
+                </div>
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <label>Rol actual</label>
+                    <small>Tu nivel de acceso en el sistema</small>
+                  </div>
+                  <span id="profileRoleDisplay" style="color:var(--cw-text);font-size:14px;font-weight:600">Usuario</span>
+                </div>
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <label>Miembro desde</label>
+                    <small>Fecha en que empezaste a usar el dashboard</small>
+                  </div>
+                  <span id="memberSinceDate" style="color:var(--cw-text);font-size:14px;font-weight:600">—</span>
+                </div>
+              </section>
+
+              <!-- CAMBIAR CONTRASEÑA -->
+              <section class="settings-section">
+                <h4>🔑 Cambiar Contraseña</h4>
+                <div class="setting-item" style="flex-direction:column;align-items:flex-start;gap:12px">
+                  <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+                    <label style="font-size:12px;font-weight:600;color:var(--cw-text-muted)">Contraseña Actual</label>
+                    <input id="currentPasswordInput" type="password" class="input-field" placeholder="Tu contraseña actual" style="padding:8px">
+                  </div>
+                  <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+                    <label style="font-size:12px;font-weight:600;color:var(--cw-text-muted)">Nueva Contraseña</label>
+                    <input id="newPasswordInput" type="password" class="input-field" placeholder="Nueva contraseña" style="padding:8px">
+                  </div>
+                  <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+                    <label style="font-size:12px;font-weight:600;color:var(--cw-text-muted)">Confirmar Nueva Contraseña</label>
+                    <input id="confirmPasswordInput" type="password" class="input-field" placeholder="Confirma la nueva contraseña" style="padding:8px">
+                  </div>
+                  <button id="changePasswordBtn" class="primary" style="padding:10px 16px;align-self:flex-end">Cambiar Contraseña</button>
+                </div>
+              </section>
+
+              <!-- DATOS Y SEGURIDAD -->
+              <section class="settings-section">
+                <h4>🔐 Datos y Seguridad</h4>
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <label>Almacenamiento local</label>
+                    <small>Progreso, comentarios e historial se almacenan en tu navegador</small>
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button id="exportAllDataBtn" class="secondary" title="Exportar todos los datos locales en JSON">📥 Exportar</button>
+                    <button id="backupDataBtn" class="secondary" title="Crear respaldo de datos">💾 Respaldar</button>
+                    <button id="restoreDataBtn" class="secondary" title="Restaurar desde respal anterior">↩️ Restaurar</button>
+                    <button id="clearDataBtn" class="secondary" title="Borrar todos los datos locales" style="background:var(--cw-danger);color:white;border-color:var(--cw-danger)">🗑️ Borrar todo</button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- BÚSQUEDA Y HISTORIAL -->
+              <section class="settings-section">
+                <h4>🔍 Búsqueda e Historial</h4>
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <label for="searchHistoryEnabled">Guardar historial de búsqueda</label>
+                    <small>Almacena tus búsquedas recientes para acceso rápido</small>
+                  </div>
+                  <input type="checkbox" id="searchHistoryEnabled" class="toggle-switch" checked title="Historial de búsqueda">
+                </div>
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <label for="autoSuggest">Sugerencias automáticas</label>
+                    <small>Mostrar sugerencias mientras escribes</small>
+                  </div>
+                  <input type="checkbox" id="autoSuggest" class="toggle-switch" checked title="Sugerencias automáticas">
+                </div>
+                <div class="setting-item">
+                  <div class="setting-label">
+                    <label>Limpiar historial</label>
+                    <small>Borrar tu historial de búsquedas y vistas</small>
+                  </div>
+                  <button id="clearHistoryBtn" class="secondary" title="Limpiar historial">Limpiar historial</button>
+                </div>
+              </section>
+
+              <!-- GESTIÓN DE USUARIOS (ADMIN ONLY) -->
+              <section class="settings-section hidden" data-admin style="grid-column: 1/-1;">
+                <h4 style="margin-top:0;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-size:18px">👥 Gestión de Usuarios (Administrador)</h4>
+                
+                <!-- Tabs de gestión de usuarios -->
+                <div style="display:flex;gap:0;margin-bottom:0;border-bottom:2px solid var(--cw-border-light);flex-wrap:wrap;background:var(--cw-surface-dark);border-radius:8px 8px 0 0">
+                  <button class="user-tab-btn active" data-tab="users-list" style="padding:12px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-primary);border-bottom:3px solid var(--cw-primary);margin-bottom:-2px;transition:all 0.2s">📋 Usuarios</button>
+                  <button class="user-tab-btn" data-tab="users-roles" style="padding:12px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-text-muted);border-bottom:3px solid transparent;transition:all 0.2s;margin-bottom:-2px">🔑 Roles</button>
+                  <button class="user-tab-btn" data-tab="users-audit" style="padding:12px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-text-muted);border-bottom:3px solid transparent;transition:all 0.2s;margin-bottom:-2px">📊 Auditoría</button>
+                  <button class="user-tab-btn" data-tab="users-stats" style="padding:12px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-text-muted);border-bottom:3px solid transparent;transition:all 0.2s;margin-bottom:-2px">📈 Estadísticas</button>
+                </div>
+                
+                <!-- Tab 1: Lista de Usuarios -->
+                <div id="users-list-tab" class="user-tab-content">
+                  <div class="setting-item" style="flex-direction:column;align-items:flex-start;gap:12px">
+                    <div id="usersList" style="width:100%;max-height:400px;overflow-y:auto;border:1px solid var(--cw-border);border-radius:8px;padding:8px">
+                      <!-- Filas de usuario inyectadas aquí -->
+                    </div>
+                    <fieldset style="width:100%;border:1px solid var(--cw-border-light);border-radius:8px;padding:12px;margin-top:8px">
+                      <legend style="font-weight:600;font-size:13px;padding:0 6px">Crear nuevo usuario</legend>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+                        <input id="newUserName" class="input-field" placeholder="Nombre de usuario" style="padding:8px">
+                        <input id="newUserFullName" class="input-field" placeholder="Nombre completo" style="padding:8px">
+                      </div>
+                      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px">
+                        <input id="newUserEmail" class="input-field" placeholder="Correo electrónico" type="email" style="padding:8px">
+                      </div>
+                      
+                      <!-- Selección de Roles Múltiples -->
+                      <div style="margin-bottom:12px">
+                        <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text-muted);margin-bottom:6px">Roles del usuario</label>
+                        <div id="newUserRolesContainer" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:8px;background:var(--cw-surface-dark);padding:10px;border-radius:6px;border:1px solid var(--cw-border-light)">
+                          <p style="color:var(--cw-text-muted);font-size:12px;grid-column:1/-1;margin:0;text-align:center;padding:8px">Cargando roles...</p>
+                        </div>
+                        <small style="color:var(--cw-text-muted);display:block;margin-top:6px">Selecciona al menos un rol para el usuario</small>
+                      </div>
+                      
+                      <div style="display:flex;gap:8px">
+                        <button id="addUserBtn" class="primary" style="padding:8px 16px;flex:1">Crear Usuario</button>
+                      </div>
+                      <small style="color:var(--cw-text-muted);margin-top:8px;display:block">El usuario recibirá un email para configurar su contraseña en el primer acceso.</small>
+                    </fieldset>
+                  </div>
+                </div>
+                
+                <!-- Tab 2: Roles Personalizables -->
+                <div id="users-roles-tab" class="user-tab-content hidden">
+                  <div class="setting-item" style="flex-direction:column;align-items:flex-start;gap:12px;width:100%">
+                    <!-- Lista de roles existentes -->
+                    <div id="rolesList" style="width:100%;max-height:450px;overflow-y:auto;border:1px solid var(--cw-border);border-radius:8px;padding:12px">
+                      <p style="color:var(--cw-text-muted);text-align:center;padding:20px 0">Cargando roles...</p>
+                    </div>
+                    
+                    <!-- Crear nuevo rol -->
+                    <fieldset style="width:100%;border:1px solid var(--cw-border-light);border-radius:8px;padding:16px;margin-top:8px">
+                      <legend style="font-weight:600;font-size:14px;padding:0 8px">➕ Crear nuevo rol</legend>
+                      
+                      <!-- Campos básicos -->
+                      <div style="margin-bottom:16px">
+                        <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text-muted);margin-bottom:4px">Nombre del rol</label>
+                        <input id="adminNewRoleName" class="input-field" placeholder="ej: Supervisor, Editor, Analista" style="padding:8px;width:100%">
+                      </div>
+                      
+                      <div style="margin-bottom:16px">
+                        <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text-muted);margin-bottom:4px">Descripción (opcional)</label>
+                        <textarea id="newRoleDescription" class="input-field" placeholder="Describe el propósito de este rol..." style="padding:8px;width:100%;height:60px;font-family:inherit;resize:vertical"></textarea>
+                      </div>
+                      
+                      <!-- Permisos agrupados por categoría -->
+                      <div style="margin-bottom:16px">
+                        <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text-muted);margin-bottom:8px">Permisos</label>
+                        <div id="permissionsGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:12px;background:var(--cw-surface-dark);padding:12px;border-radius:6px">
+                          <!-- Permisos cargados dinámicamente -->
+                          <p style="color:var(--cw-text-muted);grid-column:1/-1;text-align:center;padding:20px 0">Cargando permisos...</p>
+                        </div>
+                      </div>
+                      
+                      <!-- Botones de acción -->
+                      <div style="display:flex;gap:8px;justify-content:flex-end">
+                        <button id="clearRoleFormBtn" class="secondary" style="padding:8px 16px">Limpiar</button>
+                        <button id="addRoleBtn" class="primary" style="padding:8px 16px">Crear Rol</button>
+                      </div>
+                      <small style="color:var(--cw-text-muted);display:block;margin-top:8px">Los usuarios con este rol solo podrán realizar las acciones marcadas.</small>
+                    </fieldset>
+                  </div>
+                </div>
+                
+                <!-- Tab 3: Auditoría -->
+                <div id="users-audit-tab" class="user-tab-content hidden">
+                  <div class="setting-item" style="flex-direction:column;align-items:flex-start;gap:12px;width:100%">
+                    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+                      <select id="auditFilterUser" class="input-field" style="padding:8px;flex:1;min-width:200px">
+                        <option value="">Filtrar por usuario...</option>
+                      </select>
+                      <select id="auditFilterAction" class="input-field" style="padding:8px;flex:1;min-width:200px">
+                        <option value="">Filtrar por acción...</option>
+                        <option value="login">Inicio de sesión</option>
+                        <option value="logout">Cierre de sesión</option>
+                        <option value="password_reset">Reset de contraseña</option>
+                        <option value="specialties_updated">Especialidades actualizadas</option>
+                        <option value="deactivated">Desactivado</option>
+                        <option value="reactivated">Reactivado</option>
+                      </select>
+                      <button id="refreshAuditBtn" class="secondary small-btn" style="padding:8px 16px">🔄 Actualizar</button>
+                    </div>
+                    <div id="auditLogList" style="width:100%;max-height:500px;overflow-y:auto;border:1px solid var(--cw-border);border-radius:8px;padding:8px;font-size:12px">
+                      <!-- Log de auditoría inyectado aquí -->
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Tab 4: Estadísticas -->
+                <div id="users-stats-tab" class="user-tab-content hidden">
+                  <div class="setting-item" style="flex-direction:column;align-items:flex-start;gap:12px;width:100%">
+                    <select id="statsUserSelect" class="input-field" style="padding:8px;width:100%">
+                      <option value="">Selecciona un usuario...</option>
+                    </select>
+                    <div id="userStatsPanel" style="width:100%;display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px">
+                      <!-- Estadísticas inyectadas aquí -->
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- GESTIÓN DE CARPETAS/KNOWLEDGE BASE (ADMIN ONLY) - PROFESSIONAL REDESIGN -->
+              <section class="settings-section hidden" data-admin style="grid-column: 1/-1;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--cw-border)">
+                  <div>
+                    <h4 style="margin:0;margin-bottom:4px;display:flex;align-items:center;gap:8px;font-size:22px;font-weight:700;background:linear-gradient(135deg, var(--cw-primary), var(--cw-accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">📚 Knowledge Base Manager</h4>
+                    <p style="margin:0;color:var(--cw-text-muted);font-size:13px">Gestiona carpetas, manuales, permisos y estadísticas profesionalmente</p>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <button id="kbRefreshBtn" class="secondary small-btn" style="padding:8px 14px;display:flex;align-items:center;gap:6px;cursor:pointer" title="Actualizar estructura">🔄 Actualizar</button>
+                    <button id="kbNewFolderBtn" class="primary small-btn" style="padding:8px 14px;display:flex;align-items:center;gap:6px;cursor:pointer" title="Crear nueva carpeta">➕ Nueva Carpeta</button>
+                  </div>
+                </div>
+
+                <!-- Breadcrumb Navigation -->
+                <div id="kbBreadcrumb" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:12px 16px;background:var(--cw-surface-dark);border-radius:8px;border:1px solid var(--cw-border);font-size:12px">
+                  <span style="color:var(--cw-primary);cursor:pointer;font-weight:600" id="kbBreadcrumbRoot">📁 Raíz</span>
+                  <div id="kbBreadcrumbPath" style="display:flex;align-items:center;gap:8px;flex:1"></div>
+                </div>
+
+                <!-- Search input for KB tree -->
+                <div style="margin-bottom:16px">
+                  <input type="text" id="kbSearchInput" placeholder="🔍 Buscar carpetas, manuales..." style="width:100%;padding:12px 16px;border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-surface);color:var(--cw-text);font-size:13px;transition:all 0.2s" />
+                </div>
+
+                <!-- Tabs for different KB management views -->
+                <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--cw-border-light);background:var(--cw-surface-dark);border-radius:8px 8px 0 0;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                  <button class="kb-tab-btn active" data-tab="kb-tree" style="padding:14px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-primary);border-bottom:3px solid var(--cw-primary);margin-bottom:-2px;transition:all 0.3s;font-size:13px">🌳 Explorador</button>
+                  <button class="kb-tab-btn" data-tab="kb-teams" style="padding:14px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-text-muted);border-bottom:3px solid transparent;transition:all 0.3s;margin-bottom:-2px;font-size:13px">👥 Equipos</button>
+                  <button class="kb-tab-btn" data-tab="kb-shared" style="padding:14px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-text-muted);border-bottom:3px solid transparent;transition:all 0.3s;margin-bottom:-2px;font-size:13px">🔗 Compartidas</button>
+                  <button class="kb-tab-btn" data-tab="kb-editor" style="padding:14px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-text-muted);border-bottom:3px solid transparent;transition:all 0.3s;margin-bottom:-2px;font-size:13px">✏️ Editar</button>
+                  <button class="kb-tab-btn" data-tab="kb-stats" style="padding:14px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-text-muted);border-bottom:3px solid transparent;transition:all 0.3s;margin-bottom:-2px;font-size:13px">📊 Estadísticas</button>
+                  <button class="kb-tab-btn" data-tab="kb-templates" style="padding:14px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-text-muted);border-bottom:3px solid transparent;transition:all 0.3s;margin-bottom:-2px;font-size:13px">⚡ Plantillas</button>
+                  <button class="kb-tab-btn" data-tab="kb-permissions" style="padding:14px 20px;background:none;border:none;cursor:pointer;font-weight:600;color:var(--cw-text-muted);border-bottom:3px solid transparent;transition:all 0.3s;margin-bottom:-2px;font-size:13px">🔐 Permisos</button>
+                </div>
+
+                <!-- Tab 1: Folder Tree with NEW Professional Design -->
+                <div id="kb-tree-tab" class="kb-tab-content" style="display:block">
+                  <div class="kb-container" style="height:calc(100vh - 400px);display:flex;gap:24px">
+                    
+                    <!-- LEFT SIDEBAR: Folder Navigation -->
+                    <div class="kb-sidebar">
+                      <div class="kb-sidebar-header">
+                        <h4>📁 Carpetas</h4>
+                        <p>Navega y gestiona tu estructura</p>
+                      </div>
+                      
+                      <div class="kb-sidebar-search">
+                        <input type="text" id="kbSearchInput" placeholder="🔍 Buscar..." />
+                        <div id="kbSearchResults" style="margin-top:8px;max-height:150px;overflow-y:auto;font-size:12px"></div>
+                      </div>
+
+                      <div style="display:flex;gap:6px;padding:8px;border-bottom:1px solid var(--cw-border)">
+                        <button id="expandAllFoldersBtn" class="kb-btn" style="flex:1;font-size:11px;padding:6px">▼ Expandir</button>
+                        <button id="collapseAllFoldersBtn" class="kb-btn" style="flex:1;font-size:11px;padding:6px">▲ Contraer</button>
+                      </div>
+
+                      <div class="kb-folder-tree" id="kbFolderTree">
+                        <p style="color:var(--cw-text-muted);text-align:center;padding:20px;margin:0">⏳ Cargando...</p>
+                      </div>
+                    </div>
+
+                    <!-- RIGHT CONTENT AREA -->
+                    <div class="kb-main" style="flex:1">
+                      
+                      <!-- Breadcrumb Navigation -->
+                      <div class="kb-breadcrumb" id="kbBreadcrumb" style="display:flex;gap:8px;padding:12px 16px;background:var(--cw-surface);border-radius:8px;border:1px solid var(--cw-border);font-size:12px">
+                        <span class="kb-breadcrumb-item" data-folder-id="">📁 Raíz</span>
+                      </div>
+
+                      <!-- Content Grid -->
+                      <div class="kb-content-view" style="grid-template-columns:300px 1fr">
+                        
+                        <!-- Folder Details Panel -->
+                        <div class="kb-panel">
+                          <div class="kb-panel-header">
+                            <h3>ℹ️ Detalles</h3>
+                          </div>
+                          <div class="kb-panel-body">
+                            <div id="kbQuickInfo" class="kb-empty-state">
+                              <div class="kb-empty-state-icon">👉</div>
+                              <div class="kb-empty-state-title">Selecciona una carpeta</div>
+                              <div class="kb-empty-state-text">Elige una carpeta para ver sus detalles</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Manuales Panel -->
+                        <div class="kb-panel">
+                          <div class="kb-panel-header">
+                            <h3>📄 Manuales</h3>
+                          </div>
+                          <div class="kb-panel-body">
+                            <div id="kbFolderManualsPreview" class="kb-empty-state">
+                              <div class="kb-empty-state-icon">👉</div>
+                              <div class="kb-empty-state-title">Selecciona una carpeta</div>
+                              <div class="kb-empty-state-text">Los manuales aparecerán aquí</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- Tab 2: Folder Editor - Professional Create & Edit -->
+                <div id="kb-editor-tab" class="kb-tab-content hidden" style="display:none">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
+                    <!-- Create New Folder - PROFESSIONAL REDESIGN -->
+                    <div style="border:1px solid var(--cw-border);border-radius:14px;padding:24px;background:var(--cw-surface);box-shadow:0 8px 24px rgba(52,152,219,0.08);overflow:hidden">
+                      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--cw-primary)">
+                        <span style="font-size:20px">📁</span>
+                        <h5 style="margin:0;font-size:15px;font-weight:700">Crear Nueva Carpeta</h5>
+                      </div>
+                      
+                      <div style="display:flex;flex-direction:column;gap:16px">
+                        <!-- Nombre -->
+                        <div>
+                          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">📋 Nombre *</label>
+                          <input id="kbFolderName" class="input-field" placeholder="ej: GPON, Internet, Soporte" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px">
+                        </div>
+                        
+                        <!-- Descripción -->
+                        <div>
+                          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">📝 Descripción</label>
+                          <textarea id="kbFolderDesc" class="input-field" placeholder="Describe el contenido de esta carpeta..." style="padding:12px;width:100%;height:80px;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-family:inherit;resize:none;font-size:13px;line-height:1.5"></textarea>
+                        </div>
+                        
+                        <!-- Icono Selector -->
+                        <div>
+                          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">🎨 Icono</label>
+                          <div style="display:flex;gap:8px;align-items:center">
+                            <input id="kbFolderIcon" class="input-field" placeholder="📁" style="padding:10px;width:60px;text-align:center;font-size:22px;height:44px;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);cursor:pointer" maxlength="2" readonly>
+                            <button id="kbEmojiPickerBtn" style="padding:10px 16px;background:var(--cw-primary);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;transition:all 0.3s;flex:1">Seleccionar Emoji</button>
+                          </div>
+                          <div id="kbEmojiPickerContainer" style="display:none;margin-top:12px;padding:12px;background:rgba(0,0,0,0.02);border-radius:8px;border:1px solid var(--cw-border);max-height:250px;overflow-y:auto">
+                            <div style="display:grid;grid-template-columns:repeat(8, 1fr);gap:8px" id="kbEmojiGrid"></div>
+                          </div>
+                        </div>
+                        
+                        <!-- Carpeta Padre Jerárquica -->
+                        <div>
+                          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">📂 Carpeta Padre</label>
+                          <select id="kbFolderParent" class="input-field" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px;cursor:pointer">
+                            <option value="">📁 Raíz (sin padre)</option>
+                          </select>
+                        </div>
+                        
+                        <!-- Tipo de Carpeta -->
+                        <div>
+                          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">🏷️ Tipo de Carpeta</label>
+                          <select id="kbFolderType" class="input-field" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px;cursor:pointer">
+                            <option value="standard">📋 Estándar</option>
+                            <option value="template">📌 Plantilla</option>
+                            <option value="archive">📦 Archivo</option>
+                          </select>
+                        </div>
+                        
+                        <!-- Acceso y Privacidad -->
+                        <div>
+                          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">🔐 Nivel de Acceso</label>
+                          <select id="kbFolderAccess" onchange="handleKBFolderAccessChange(event)" class="input-field" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px;cursor:pointer">
+                            <option value="private">🔒 Privado (Solo tú)</option>
+                            <option value="public">🌐 Público (Todos)</option>
+                            <option value="team">👥 Equipo (Compartido)</option>
+                          </select>
+                          <p style="margin:8px 0 0 0;font-size:11px;color:var(--cw-text-muted);font-style:italic">💡 Si seleccionas Privado, solo tú podrás ver esta carpeta</p>
+                        </div>
+
+                        <!-- Team Selector for Create Folder -->
+                        <div id="kbTeamSelectorContainer" style="display:none;">
+                          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">👥 Seleccionar Equipo</label>
+                          <select id="kbFolderTeam" class="input-field" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px;cursor:pointer">
+                            <option value="">Cargando equipos...</option>
+                          </select>
+                        </div>
+                        
+                        <!-- Botones de Acción -->
+                        <div style="display:flex;gap:10px;padding-top:8px">
+                          <button id="kbCreateFolderBtn" style="padding:12px 16px;flex:1;background:linear-gradient(135deg, #3b82f6, #2563eb);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.3s">✓ Crear Carpeta</button>
+                          <button id="kbClearFolderFormBtn" style="padding:12px 16px;flex:0.6;background:var(--cw-border);color:var(--cw-text);border:1px solid var(--cw-border);border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.3s">Limpiar</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Edit Selected Folder - PROFESSIONAL REDESIGN -->
+                    <div style="border:1px solid var(--cw-border);border-radius:14px;padding:24px;background:var(--cw-surface);box-shadow:0 8px 24px rgba(46,204,113,0.08);overflow:hidden">
+                      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--cw-accent)">
+                        <span style="font-size:20px">✏️</span>
+                        <h5 style="margin:0;font-size:15px;font-weight:700">Editar Carpeta Seleccionada</h5>
+                      </div>
+                      <div id="kbEditPanel" style="display:flex;flex-direction:column;gap:16px">
+                        <div>
+                          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">📁 Selecciona la carpeta a editar</label>
+                          <div id="kbEditFolderTreeContainer" style="border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-bg);overflow-y:auto;max-height:300px;padding:8px">
+                            <div style="padding:12px;text-align:center;color:var(--cw-text-muted);font-size:12px">
+                              Cargando carpetas...
+                            </div>
+                          </div>
+                          <input id="kbEditFolderSelect" type="hidden" value="">
+                          <div style="margin-top:12px;padding:12px;background:var(--cw-bg-hover);border-radius:6px;font-size:11px;color:var(--cw-text-muted)">
+                            <strong>Seleccionada:</strong> <span id="kbEditSelectedFolderName">Ninguna carpeta</span>
+                          </div>
+                        </div>
+                        <button id="kbOpenEditFolderBtn" style="padding:12px 20px;background:var(--cw-primary);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.2s" onclick="openEditFolderPanel()">
+                          ✏️ Editar Carpeta
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab 3: Statistics - Professional Dashboard -->
+                <div id="kb-stats-tab" class="kb-tab-content hidden" style="display:none">
+                  <!-- Summary Cards -->
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin-bottom:20px">
+                    <div style="border:1px solid var(--cw-border);border-radius:12px;padding:18px;background:linear-gradient(135deg, rgba(52,152,219,0.05), rgba(52,152,219,0.02));box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                      <div style="display:flex;align-items:center;justify-content:space-between">
+                        <div>
+                          <div style="font-size:11px;color:var(--cw-text-muted);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:6px">Carpetas</div>
+                          <div style="font-size:28px;font-weight:700;color:var(--cw-primary)" id="kbStatTotalFolders">0</div>
+                        </div>
+                        <div style="font-size:32px;opacity:0.3">📁</div>
+                      </div>
+                    </div>
+                    <div style="border:1px solid var(--cw-border);border-radius:12px;padding:18px;background:linear-gradient(135deg, rgba(46,204,113,0.05), rgba(46,204,113,0.02));box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                      <div style="display:flex;align-items:center;justify-content:space-between">
+                        <div>
+                          <div style="font-size:11px;color:var(--cw-text-muted);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:6px">Manuales</div>
+                          <div style="font-size:28px;font-weight:700;color:var(--cw-accent)" id="kbStatTotalManuals">0</div>
+                        </div>
+                        <div style="font-size:32px;opacity:0.3">📄</div>
+                      </div>
+                    </div>
+                    <div style="border:1px solid var(--cw-border);border-radius:12px;padding:18px;background:linear-gradient(135deg, rgba(52,73,94,0.05), rgba(52,73,94,0.02));box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                      <div style="display:flex;align-items:center;justify-content:space-between">
+                        <div>
+                          <div style="font-size:11px;color:var(--cw-text-muted);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:6px">Tamaño</div>
+                          <div style="font-size:28px;font-weight:700;color:var(--cw-warning)" id="kbStatTotalSize">0 KB</div>
+                        </div>
+                        <div style="font-size:32px;opacity:0.3">💾</div>
+                      </div>
+                    </div>
+                    <div style="border:1px solid var(--cw-border);border-radius:12px;padding:18px;background:linear-gradient(135deg, rgba(155,89,182,0.05), rgba(155,89,182,0.02));box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                      <div style="display:flex;align-items:center;justify-content:space-between">
+                        <div>
+                          <div style="font-size:11px;color:var(--cw-text-muted);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:6px">Revisados</div>
+                          <div style="font-size:28px;font-weight:700;color:rgb(155,89,182)" id="kbStatReviewedPercent">0%</div>
+                        </div>
+                        <div style="font-size:32px;opacity:0.3">✅</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Top Folders -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div style="border:1px solid var(--cw-border);border-radius:12px;padding:20px;background:var(--cw-surface-dark);box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                      <h5 style="margin:0 0 14px 0;font-size:13px;font-weight:700;color:var(--cw-text-muted);text-transform:uppercase;letter-spacing:1px">� Top Carpetas (Manuales)</h5>
+                      <div id="kbTopFolders" style="display:flex;flex-direction:column;gap:10px">
+                        <p style="color:var(--cw-text-muted);text-align:center;padding:30px 10px;margin:0;font-size:12px">⏳ Cargando...</p>
+                      </div>
+                    </div>
+                    <div style="border:1px solid var(--cw-border);border-radius:12px;padding:20px;background:var(--cw-surface-dark);box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                      <h5 style="margin:0 0 14px 0;font-size:13px;font-weight:700;color:var(--cw-text-muted);text-transform:uppercase;letter-spacing:1px">📊 Estadísticas Generales</h5>
+                      <div style="display:flex;flex-direction:column;gap:10px;font-size:12px">
+                        <div style="padding:8px;border:1px solid var(--cw-border);border-radius:6px;background:var(--cw-input-bg)">
+                          <div style="color:var(--cw-text-muted);margin-bottom:4px">Total de Carpetas</div>
+                          <div style="font-weight:700;font-size:16px;color:var(--cw-primary)"><span class="kb-stat-value">0</span> carpetas</div>
+                        </div>
+                        <div style="padding:8px;border:1px solid var(--cw-border);border-radius:6px;background:var(--cw-input-bg)">
+                          <div style="color:var(--cw-text-muted);margin-bottom:4px">Total de Manuales</div>
+                          <div style="font-weight:700;font-size:16px;color:var(--cw-accent)"><span class="kb-stat-value">0</span> manuales</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab 4: Templates - Professional Preset Structures -->
+                <div id="kb-templates-tab" class="kb-tab-content hidden" style="display:none">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px">
+                    <!-- Default Template -->
+                    <div style="border:2px solid var(--cw-border);border-radius:12px;padding:16px;background:var(--cw-surface-dark);cursor:pointer;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1)" id="templateDefault" data-template="default" onmouseover="this.style.borderColor='var(--cw-primary)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--cw-border)';this.style.transform='translateY(0)'">
+                      <div style="font-size:36px">📚</div>
+                      <div style="font-weight:700;font-size:13px;text-align:center">Estructura Base</div>
+                      <small style="color:var(--cw-text-muted);text-align:center;font-size:11px">Carpetas básicas estándar</small>
+                      <button class="small-btn primary" style="margin-top:8px;padding:8px 14px;width:100%;font-size:11px;cursor:pointer;border-radius:6px;transition:all 0.2s">Usar Plantilla</button>
+                    </div>
+
+                    <!-- IT Template -->
+                    <div style="border:2px solid var(--cw-border);border-radius:12px;padding:16px;background:var(--cw-surface-dark);cursor:pointer;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1)" id="templateIT" data-template="it" onmouseover="this.style.borderColor='var(--cw-primary)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--cw-border)';this.style.transform='translateY(0)'">
+                      <div style="font-size:36px">🔧</div>
+                      <div style="font-weight:700;font-size:13px;text-align:center">IT Básico</div>
+                      <small style="color:var(--cw-text-muted);text-align:center;font-size:11px">Hardware, Software, Redes</small>
+                      <button class="small-btn primary" style="margin-top:8px;padding:8px 14px;width:100%;font-size:11px;cursor:pointer;border-radius:6px;transition:all 0.2s">Usar Plantilla</button>
+                    </div>
+
+                    <!-- Internet Template -->
+                    <div style="border:2px solid var(--cw-border);border-radius:12px;padding:16px;background:var(--cw-surface-dark);cursor:pointer;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1)" id="templateInternet" data-template="internet" onmouseover="this.style.borderColor='var(--cw-primary)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--cw-border)';this.style.transform='translateY(0)'">
+                      <div style="font-size:36px">🌐</div>
+                      <div style="font-weight:700;font-size:13px;text-align:center">Internet</div>
+                      <small style="color:var(--cw-text-muted);text-align:center;font-size:11px">GPON, Fibra, Conectividad</small>
+                      <button class="small-btn primary" style="margin-top:8px;padding:8px 14px;width:100%;font-size:11px;cursor:pointer;border-radius:6px;transition:all 0.2s">Usar Plantilla</button>
+                    </div>
+
+                    <!-- TV Template -->
+                    <div style="border:2px solid var(--cw-border);border-radius:12px;padding:16px;background:var(--cw-surface-dark);cursor:pointer;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1)" id="templateTV" data-template="tv" onmouseover="this.style.borderColor='var(--cw-primary)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--cw-border)';this.style.transform='translateY(0)'">
+                      <div style="font-size:36px">📺</div>
+                      <div style="font-weight:700;font-size:13px;text-align:center">TV</div>
+                      <small style="color:var(--cw-text-muted);text-align:center;font-size:11px">Video, Streaming, Canales</small>
+                      <button class="small-btn primary" style="margin-top:8px;padding:8px 14px;width:100%;font-size:11px;cursor:pointer;border-radius:6px;transition:all 0.2s">Usar Plantilla</button>
+                    </div>
+
+                    <!-- Phone Template -->
+                    <div style="border:2px solid var(--cw-border);border-radius:12px;padding:16px;background:var(--cw-surface-dark);cursor:pointer;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1)" id="templatePhone" data-template="phone" onmouseover="this.style.borderColor='var(--cw-primary)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--cw-border)';this.style.transform='translateY(0)'">
+                      <div style="font-size:36px">☎️</div>
+                      <div style="font-weight:700;font-size:13px;text-align:center">Telefonía</div>
+                      <small style="color:var(--cw-text-muted);text-align:center;font-size:11px">VoIP, Config, Troubleshooting</small>
+                      <button class="small-btn primary" style="margin-top:8px;padding:8px 14px;width:100%;font-size:11px;cursor:pointer;border-radius:6px;transition:all 0.2s">Usar Plantilla</button>
+                    </div>
+
+                    <!-- Support Template -->
+                    <div style="border:2px solid var(--cw-border);border-radius:12px;padding:16px;background:var(--cw-surface-dark);cursor:pointer;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1)" id="templateSupport" data-template="support" onmouseover="this.style.borderColor='var(--cw-primary)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--cw-border)';this.style.transform='translateY(0)'">
+                      <div style="font-size:36px">🆘</div>
+                      <div style="font-weight:700;font-size:13px;text-align:center">Soporte</div>
+                      <small style="color:var(--cw-text-muted);text-align:center;font-size:11px">Troubleshooting, FAQs, Tickets</small>
+                      <button class="small-btn primary" style="margin-top:8px;padding:8px 14px;width:100%;font-size:11px;cursor:pointer;border-radius:6px;transition:all 0.2s">Usar Plantilla</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab 5: Permissions & Sharing -->
+                <div id="kb-permissions-tab" class="kb-tab-content hidden" style="display:none">
+                  <div style="border:1px solid var(--cw-border);border-radius:12px;padding:20px;background:var(--cw-surface-dark);box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                    <h5 style="margin:0 0 16px 0;font-size:13px;font-weight:700;color:var(--cw-text-muted);text-transform:uppercase;letter-spacing:1px">🔐 Gestionar Permisos</h5>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                      <!-- Current Folder Permissions -->
+                      <div>
+                        <h6 style="margin:0 0 12px 0;font-size:12px;font-weight:600;color:var(--cw-primary)">Carpeta Seleccionada</h6>
+                        <div id="kbPermissionsPanel" style="display:flex;flex-direction:column;gap:10px">
+                          <p style="color:var(--cw-text-muted);text-align:center;padding:30px 10px;font-size:12px">👉 Selecciona una carpeta para gestionar permisos</p>
+                        </div>
+                      </div>
+                      <!-- Permission Levels -->
+                      <div>
+                        <h6 style="margin:0 0 12px 0;font-size:12px;font-weight:600;color:var(--cw-primary)">Niveles de Acceso</h6>
+                        <div style="display:flex;flex-direction:column;gap:10px">
+                          <div style="border:1px solid var(--cw-border);border-radius:8px;padding:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(52,152,219,0.05)'" onmouseout="this.style.background='transparent'">
+                            <div style="font-weight:600;font-size:12px">🌐 Público</div>
+                            <small style="color:var(--cw-text-muted);font-size:11px">Todos pueden ver y descargar</small>
+                          </div>
+                          <div style="border:1px solid var(--cw-border);border-radius:8px;padding:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(52,152,219,0.05)'" onmouseout="this.style.background='transparent'">
+                            <div style="font-weight:600;font-size:12px">👥 Equipo</div>
+                            <small style="color:var(--cw-text-muted);font-size:11px">Solo usuarios del equipo</small>
+                          </div>
+                          <div style="border:1px solid var(--cw-border);border-radius:8px;padding:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(52,152,219,0.05)'" onmouseout="this.style.background='transparent'">
+                            <div style="font-weight:600;font-size:12px">🔒 Privado</div>
+                            <small style="color:var(--cw-text-muted);font-size:11px">Solo para el propietario</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab: Teams Management -->
+                <div id="kb-teams-tab" class="kb-tab-content hidden" style="display:none;padding:20px">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <!-- Create Team -->
+                    <div style="border:1px solid var(--cw-border);border-radius:12px;padding:20px;background:var(--cw-surface-dark)">
+                      <h5 style="margin:0 0 16px 0;font-size:14px;font-weight:700">👥 Crear Nuevo Equipo</h5>
+                      <div style="display:flex;flex-direction:column;gap:12px">
+                        <input id="kbNewTeamName" class="input-field" placeholder="Nombre del equipo" style="padding:10px;border:1px solid var(--cw-border);border-radius:6px">
+                        <textarea id="kbNewTeamDesc" class="input-field" placeholder="Descripción (opcional)" style="padding:10px;border:1px solid var(--cw-border);border-radius:6px;min-height:80px;resize:vertical"></textarea>
+                        <button id="kbCreateTeamBtn" class="kb-action-btn" style="padding:10px;background:var(--cw-primary);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;transition:all 0.3s">➕ Crear Equipo</button>
+                      </div>
+                    </div>
+
+                    <!-- Teams List -->
+                    <div style="border:1px solid var(--cw-border);border-radius:12px;padding:20px;background:var(--cw-surface-dark)">
+                      <h5 style="margin:0 0 16px 0;font-size:14px;font-weight:700">Mi Equipos</h5>
+                      <div id="kbTeamsList" style="display:flex;flex-direction:column;gap:12px;max-height:500px;overflow-y:auto">
+                        <p style="color:var(--cw-text-muted);text-align:center;padding:40px 10px;font-size:12px">Cargando equipos...</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Team Details (shown when team selected) -->
+                  <div id="kbTeamDetailsPanel" style="margin-top:20px;border:1px solid var(--cw-border);border-radius:12px;padding:20px;background:var(--cw-surface-dark);display:none">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                      <h5 id="kbTeamDetailTitle" style="margin:0;font-size:16px;font-weight:700"></h5>
+                      <button id="kbCloseTeamDetails" style="padding:6px 12px;background:transparent;border:1px solid var(--cw-border);border-radius:6px;cursor:pointer;font-size:12px">✕ Cerrar</button>
+                    </div>
+
+                    <!-- Team Members -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                      <div>
+                        <h6 style="font-size:12px;font-weight:700;color:var(--cw-primary);margin-bottom:10px">Miembros</h6>
+                        <div id="kbTeamMembersList" style="display:flex;flex-direction:column;gap:8px;max-height:250px;overflow-y:auto">
+                        </div>
+                      </div>
+
+                      <!-- Add Member -->
+                      <div>
+                        <h6 style="font-size:12px;font-weight:700;color:var(--cw-primary);margin-bottom:10px">Agregar Miembro</h6>
+                        <div style="display:flex;flex-direction:column;gap:10px">
+                          <input id="kbInviteEmail" class="input-field" type="email" placeholder="Correo del usuario" style="padding:8px;border:1px solid var(--cw-border);border-radius:6px;font-size:12px">
+                          <button id="kbInviteToTeamBtn" style="padding:8px;background:var(--cw-primary);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px">📧 Enviar Invitación</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Share Folders with Team -->
+                    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--cw-border)">
+                      <h6 style="font-size:12px;font-weight:700;color:var(--cw-primary);margin-bottom:10px">📁 Carpetas Compartidas</h6>
+                      <div id="kbTeamSharedFolders" style="display:flex;flex-direction:column;gap:8px;max-height:250px;overflow-y:auto">
+                        <p style="color:var(--cw-text-muted);font-size:11px">Sin carpetas compartidas</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab: Shared with Me -->
+                <div id="kb-shared-tab" class="kb-tab-content hidden" style="display:none;padding:20px">
+                  <div style="border:1px solid var(--cw-border);border-radius:12px;padding:20px;background:var(--cw-surface-dark)">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                      <h5 style="margin:0;font-size:14px;font-weight:700">🔗 Carpetas Compartidas Conmigo</h5>
+                      <div style="display:flex;gap:8px">
+                        <input id="kbSearchShared" class="input-field" type="search" placeholder="🔍 Buscar..." style="padding:8px 12px;border:1px solid var(--cw-border);border-radius:6px;font-size:12px;width:200px">
+                      </div>
+                    </div>
+
+                    <!-- Shared Folders List -->
+                    <div id="kbSharedFoldersList" style="display:flex;flex-direction:column;gap:12px;max-height:600px;overflow-y:auto">
+                      <p style="color:var(--cw-text-muted);text-align:center;padding:40px 10px;font-size:12px">Cargando carpetas compartidas...</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- QR Modal -->
+  <div id="qrModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+    <div class="modal-content">
+      <h4 id="qrTitle">Abrir en móvil</h4>
+      <img id="qrImage" alt="Código QR para abrir manual" style="max-width:280px">
+      <p>Escanea con la cámara de tu móvil para abrir este manual.</p>
+    </div>
+  </div>
+
+  <!-- Modal de inicio de sesión -->
+  <div id="loginModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="modal-content">
+      <h4 id="loginTitle">Iniciar sesión</h4>
+      
+      <!-- Step 1: Username/Email -->
+      <div id="loginStep1" style="display:flex;flex-direction:column;gap:8px">
+        <input id="loginUser" placeholder="Usuario o Correo" class="input-field" autocomplete="username">
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="loginNextBtn" class="primary">Siguiente</button>
+        </div>
+      </div>
+      
+      <!-- Paso 2: Contraseña o configuración -->
+      <div id="loginStep2" class="hidden" style="display:flex;flex-direction:column;gap:8px">
+        <div style="color:var(--cw-text-muted);font-size:13px;margin-bottom:8px">
+          <span id="loginUserDisplay"></span>
+        </div>
+        
+        <!-- Mostrar campo de contraseña si passwordSet=true -->
+        <div id="passwordFieldWrapper" style="display:flex;flex-direction:column;gap:8px">
+          <input id="loginPass" placeholder="Contraseña" type="password" class="input-field" autocomplete="current-password">
+        </div>
+        
+        <!-- Mostrar botón de configuración si passwordSet=false -->
+        <div id="setupButtonWrapper" class="hidden" style="text-align:center;padding:16px;background:var(--cw-surface-dark);border-radius:8px">
+          <p style="color:var(--cw-text-muted);font-size:13px;margin:0 0 12px 0">Este es tu primer acceso.</p>
+          <button id="goToSetupBtn" class="primary" style="width:100%">Configurar Contraseña</button>
+        </div>
+        
+        <div style="display:flex;gap:8px;justify-content:space-between">
+          <button id="loginBackBtn" class="secondary">Atrás</button>
+          <button id="loginSubmit" class="primary">Iniciar Sesión</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de configuración de contraseña (primer inicio de sesión) -->
+  <div id="setupPasswordModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="setupPasswordTitle">
+    <div class="modal-content" style="max-width:400px">
+      <h4 id="setupPasswordTitle">Configurar Contraseña</h4>
+      <p style="color:var(--cw-text-muted);font-size:13px;margin-bottom:16px">Este es tu primer acceso. Por favor, establece una contraseña segura.</p>
+      
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--cw-text-muted)">Correo electrónico</label>
+          <input id="setupEmail" class="input-field" readonly style="background:var(--cw-surface-dark);cursor:not-allowed">
+        </div>
+
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--cw-text-muted)">Nueva Contraseña</label>
+          <input id="setupPassword" type="password" class="input-field" placeholder="Mínimo 8 caracteres">
+          
+          <!-- Indicador de fortaleza de contraseña -->
+          <div id="passwordStrengthBar" style="height:4px;background:var(--cw-border-light);border-radius:2px;margin-top:6px;overflow:hidden">
+            <div id="passwordStrengthFill" style="height:100%;width:0%;background:#ff6b35;transition:width 0.2s ease"></div>
+          </div>
+          
+          <!-- Requisitos de contraseña -->
+          <div id="passwordRequirements" style="font-size:11px;color:var(--cw-text-muted);margin-top:8px;display:grid;gap:4px">
+            <div><span id="req1">○</span> 8 caracteres mínimo</div>
+            <div><span id="req2">○</span> Una mayúscula (A-Z)</div>
+            <div><span id="req3">○</span> Una minúscula (a-z)</div>
+            <div><span id="req4">○</span> Un número (0-9)</div>
+            <div><span id="req5">○</span> Un carácter especial (!@#$%^&*)</div>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--cw-text-muted)">Confirmar Contraseña</label>
+          <input id="setupPasswordConfirm" type="password" class="input-field" placeholder="Repite la contraseña">
+          <div id="passwordMatchIndicator" style="font-size:11px;color:var(--cw-text-muted);margin-top:4px">
+            <span id="matchStatus">○ Las contraseñas deben coincidir</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+          <button id="cancelSetupBtn" class="secondary" style="padding:8px 16px">Cancelar</button>
+          <button id="submitSetupBtn" class="primary" style="padding:8px 16px" disabled>Establecer Contraseña</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de herramientas flotante de administrador eliminada: la barra de herramientas se eliminó por solicitud del usuario -->
+
+  <!-- New Manual Modal - REDESIGNED PROFESSIONAL -->
+  <div id="newManualModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="newManualTitle">
+    <div class="modal-content" style="max-width:680px;background:var(--cw-surface);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.15)">
+      <button class="close" data-close aria-label="Cerrar" style="top:16px;right:16px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      
+      <!-- HEADER -->
+      <div style="padding:28px 28px 20px 28px;border-bottom:1px solid var(--cw-border)">
+        <h4 id="newManualTitle" style="margin:0;font-size:20px;font-weight:700;color:var(--cw-text);display:flex;align-items:center;gap:10px">📖 Crear Nuevo Manual</h4>
+        <p style="margin:8px 0 0 0;font-size:13px;color:var(--cw-text-muted)">Rellena los datos básicos y añade los pasos de tu manual</p>
+      </div>
+      
+      <!-- CONTENT -->
+      <div style="padding:28px;display:flex;flex-direction:column;gap:20px;max-height:70vh;overflow-y:auto">
+        
+        <!-- SECTION 1: Información Básica -->
+        <div>
+          <h5 style="margin:0 0 12px 0;font-size:13px;font-weight:700;color:var(--cw-text);text-transform:uppercase;letter-spacing:0.5px">Información Básica</h5>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:6px">📋 Título del Manual *</label>
+              <input id="newTitle" class="input-field" placeholder="Ej: Cómo usar el sistema de facturación" style="width:100%;padding:12px;border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-bg)">
+            </div>
+            
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:6px">📂 Categoría *</label>
+              <div style="display:flex;gap:8px;align-items:stretch">
+                <select id="newCategorySelect" class="input-field" style="flex:1;padding:12px;border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-bg)">
+                  <option value="">Selecciona una categoría existente</option>
+                </select>
+                <input id="newCategoryName" class="input-field" placeholder="O crea una nueva" style="flex:0 0 200px;padding:12px;border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-bg)">
+              </div>
+              <p style="margin:6px 0 0 0;font-size:11px;color:var(--cw-text-muted)">💡 Escriba un nombre para crear una categoría nueva</p>
+            </div>
+            
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:6px">📁 Carpeta</label>
+              <div id="manualFolderTreeContainer" style="border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-bg);overflow-y:auto;max-height:250px;padding:8px">
+                <div style="padding:12px;text-align:center;color:var(--cw-text-muted);font-size:12px">
+                  Cargando carpetas...
+                </div>
+              </div>
+              <input id="newManualFolderSelect" type="hidden" value="">
+              <div style="margin-top:6px;padding:8px;background:var(--cw-bg-hover);border-radius:6px;font-size:11px;color:var(--cw-text-muted)">
+                <strong>Seleccionada:</strong> <span id="selectedFolderName">Sin carpeta</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- SECTION 2: Metadata -->
+        <div>
+          <h5 style="margin:0 0 12px 0;font-size:13px;font-weight:700;color:var(--cw-text);text-transform:uppercase;letter-spacing:0.5px">Versión y Resumen</h5>
+          <div style="display:flex;gap:12px;margin-bottom:16px">
+            <div style="flex:0 0 120px">
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:6px">Versión</label>
+              <input id="newVersion" class="input-field" placeholder="1.0.0" style="width:100%;padding:12px;border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-bg)">
+            </div>
+            <div style="flex:1">
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:6px">Resumen Breve</label>
+              <input id="newSummary" class="input-field" placeholder="Describe brevemente el contenido" style="width:100%;padding:12px;border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-bg)">
+            </div>
+          </div>
+          
+          <!-- Privacy Toggle -->
+          <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.2);border-radius:8px">
+            <input id="newManualPrivate" type="checkbox" style="width:16px;height:16px;cursor:pointer;accent-color:var(--cw-primary)">
+            <label for="newManualPrivate" style="flex:1;font-size:12px;font-weight:600;color:var(--cw-text);cursor:pointer;margin:0">
+              🔒 Hacer manual privado
+            </label>
+            <span style="font-size:11px;color:var(--cw-text-muted);white-space:nowrap">Solo compartibles</span>
+          </div>
+        </div>
+        
+        <!-- SECTION 3: Steps Editor -->
+        <div>
+          <h5 style="margin:0 0 12px 0;font-size:13px;font-weight:700;color:var(--cw-text);text-transform:uppercase;letter-spacing:0.5px">Pasos del Manual</h5>
+          <div id="newStepsEditor" style="display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;padding:14px;border:1px solid var(--cw-border);border-radius:8px;background:rgba(0,0,0,0.02)"></div>
+          <button id="addNewStepBtn" style="margin-top:12px;padding:12px 16px;background:var(--cw-primary);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.3s;display:inline-flex;align-items:center;gap:6px">✚ Añadir Paso</button>
+        </div>
+        
+        <!-- SECTION 4: Import Options -->
+        <div style="border-top:1px solid var(--cw-border);padding-top:16px">
+          <h5 style="margin:0 0 12px 0;font-size:13px;font-weight:700;color:var(--cw-text);text-transform:uppercase;letter-spacing:0.5px">Importar desde Archivo</h5>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <input id="pdfFileInput" type="file" accept=".pdf" style="display:none">
+            <button id="processPdfBtn" style="flex:1;min-width:160px;padding:12px 16px;background:linear-gradient(135deg, #ec4899, #db2777);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.3s;display:inline-flex;align-items:center;justify-content:center;gap:6px">📄 Importar PDF</button>
+            <input id="jsonFileInput" type="file" accept=".json" style="display:none">
+            <button id="importJsonBtn" style="flex:1;min-width:160px;padding:12px 16px;background:linear-gradient(135deg, #6366f1, #4f46e5);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.3s;display:inline-flex;align-items:center;justify-content:center;gap:6px">📋 Importar JSON</button>
+          </div>
+          <div id="pdfStatus" style="font-size:12px;color:var(--cw-text-muted);margin-top:8px;display:none"></div>
+        </div>
+      </div>
+      
+      <!-- FOOTER -->
+      <div style="padding:16px 28px;border-top:1px solid var(--cw-border);display:flex;gap:10px;justify-content:flex-end;background:rgba(0,0,0,0.01)">
+        <button class="secondary" data-close style="padding:12px 20px;border-radius:8px">Cancelar</button>
+        <button id="saveNewManualBtn" class="primary" style="padding:12px 28px;border-radius:8px;background:linear-gradient(135deg, #3b82f6, #2563eb);color:white;border:none;cursor:pointer;font-weight:600;transition:all 0.3s">💾 Guardar Manual</button>
+      </div>
+      
+      <script>
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', setupNewManualInputs);
+        } else {
+          setupNewManualInputs();
+        }
+        
+        function setupNewManualInputs() {
+          setTimeout(() => {
+            const catName = document.getElementById('newCategoryName');
+            const catSelect = document.getElementById('newCategorySelect');
+            if (catName && catSelect) {
+              catName.addEventListener('input', function() {
+                catSelect.disabled = this.value.trim() !== '';
+                catSelect.style.opacity = catSelect.disabled ? '0.5' : '1';
+              });
+            }
+          }, 100);
+        }
+      </script>
+    </div>
+  </div>
+
+  <!-- Edit Folder Modal -->
+  <div id="editFolderModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editFolderTitle">
+    <div class="modal-content" style="max-width:600px;background:var(--cw-surface);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.15)">
+      <button class="close" data-close aria-label="Cerrar" style="top:16px;right:16px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      
+      <!-- HEADER -->
+      <div style="padding:28px 28px 20px 28px;border-bottom:1px solid var(--cw-border)">
+        <h4 id="editFolderTitle" style="margin:0;font-size:20px;font-weight:700;color:var(--cw-text);display:flex;align-items:center;gap:10px">✏️ Editar Carpeta</h4>
+        <p style="margin:8px 0 0 0;font-size:13px;color:var(--cw-text-muted)">Modifica los datos de la carpeta</p>
+      </div>
+      
+      <!-- CONTENT -->
+      <div style="padding:28px;display:flex;flex-direction:column;gap:16px">
+        <input id="editFolderId" type="hidden" value="">
+        
+        <!-- Nombre -->
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">📋 Nombre *</label>
+          <input id="editFolderName" class="input-field" placeholder="Nombre de la carpeta" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px">
+        </div>
+        
+        <!-- Descripción -->
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">📝 Descripción</label>
+          <textarea id="editFolderDesc" class="input-field" placeholder="Describe el contenido de esta carpeta" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px;min-height:100px;resize:vertical"></textarea>
+        </div>
+        
+        <!-- Ícono -->
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">🎨 Ícono</label>
+          <input id="editFolderIcon" class="input-field" placeholder="ej: 📁, 🚀, 📚" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px;max-width:120px">
+        </div>
+        
+        <!-- Tipo de Carpeta -->
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">📂 Tipo de Carpeta</label>
+          <select id="editFolderType" class="input-field" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px">
+            <option value="regular">Regular</option>
+            <option value="template">Plantilla</option>
+            <option value="archive">Archivo</option>
+            <option value="shared">Compartida</option>
+          </select>
+        </div>
+        
+        <!-- Nivel de Acceso -->
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--cw-text);margin-bottom:8px">🔐 Nivel de Acceso</label>
+          <select id="editFolderAccess" class="input-field" style="padding:12px;width:100%;border-radius:8px;border:1px solid var(--cw-border);background:var(--cw-bg);font-size:13px">
+            <option value="private">Privada</option>
+            <option value="team">Equipo</option>
+            <option value="public">Pública</option>
+          </select>
+        </div>
+        
+        <!-- PERMISSIONS SECTION (NEW PROFESSIONAL) -->
+        <div style="border-top:2px solid var(--cw-border);padding-top:16px;margin-top:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <span style="font-size:16px">🔒</span>
+            <h6 style="margin:0;font-size:13px;font-weight:700;color:var(--cw-text)">Permisos Profesionales</h6>
+          </div>
+          
+          <!-- Compartir con Usuarios -->
+          <div style="background:var(--cw-bg);border:1px solid var(--cw-border);border-radius:8px;padding:12px;margin-bottom:12px">
+            <div style="font-size:11px;font-weight:600;color:var(--cw-text-muted);margin-bottom:10px;text-transform:uppercase">👤 Compartir con Usuarios</div>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <input id="shareUserEmail" type="email" placeholder="email@example.com" style="flex:1;padding:8px;border:1px solid var(--cw-border);border-radius:6px;font-size:12px;background:var(--cw-input-bg)">
+              <select id="shareUserLevel" style="padding:8px;border:1px solid var(--cw-border);border-radius:6px;font-size:12px;background:var(--cw-input-bg)">
+                <option value="viewer">Lectura</option>
+                <option value="editor">Edición</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button onclick="shareFolderWithUser()" style="padding:8px 12px;background:var(--cw-primary);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px">Compartir</button>
+            </div>
+            
+            <!-- Lista de usuarios con acceso compartido -->
+            <div id="folderSharesList" style="border-top:1px solid var(--cw-border);padding-top:10px;max-height:150px;overflow-y:auto">
+              <div style="text-align:center;padding:20px;color:var(--cw-text-muted);font-size:12px">
+                Cargando usuarios con acceso...
+              </div>
+            </div>
+          </div>
+          
+          <!-- Información de Acceso -->
+          <div style="background:linear-gradient(135deg, rgba(59,130,246,0.05), rgba(99,102,241,0.05));border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:12px;font-size:11px;color:var(--cw-text-muted)">
+            <div style="margin-bottom:6px"><strong>📌 Información de Acceso:</strong></div>
+            <ul style="margin:0;padding-left:16px">
+              <li>🔒 <strong>Privada:</strong> Solo tú puedes ver esta carpeta</li>
+              <li>👥 <strong>Equipo:</strong> Solo miembros del equipo</li>
+              <li>🌐 <strong>Pública:</strong> Todos pueden ver esta carpeta</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- FOOTER -->
+      <div style="padding:16px 28px;border-top:1px solid var(--cw-border);display:flex;gap:10px;justify-content:space-between;background:rgba(0,0,0,0.01)">
+        <button id="deleteEditFolderBtn" class="secondary" style="padding:12px 20px;border-radius:8px;background:linear-gradient(135deg, #ef4444, #dc2626);color:white;border:none;cursor:pointer;font-weight:600;transition:all 0.3s">🗑️ Eliminar</button>
+        <div style="display:flex;gap:10px">
+          <button class="secondary" data-close style="padding:12px 20px;border-radius:8px">Cancelar</button>
+          <button id="saveEditFolderBtn" class="primary" style="padding:12px 28px;border-radius:8px;background:linear-gradient(135deg, #3b82f6, #2563eb);color:white;border:none;cursor:pointer;font-weight:600;transition:all 0.3s">💾 Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Manuals Modal -->
+  <div id="importModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="modal-content">
+      <button class="close" data-close aria-label="Cerrar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <h4 id="importTitle">Importar manuales</h4>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label>Pega aquí JSON con un array de manuales</label>
+        <textarea id="importBody" class="input-field" style="min-height:200px;font-family:monospace"></textarea>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="importConfirmBtn" class="primary">Importar</button>
+          <button class="secondary" data-close>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de editor de manual (administrador) -->
+  <div id="manualEditorModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editManualTitle">
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--cw-border); padding-bottom: 12px; margin-bottom: 16px;">
+        <h4 id="editManualTitle" style="margin: 0; color: var(--cw-text);">Editar manual</h4>
+        <button class="close" data-close aria-label="Cerrar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div style="flex: 1; overflow-y: auto; padding-right: 8px;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Título -->
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 600; color: var(--cw-text-muted); margin-bottom: 4px;">Título</label>
+            <input id="editTitle" class="input-field" placeholder="Título del manual" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--cw-border);">
+          </div>
+
+          <!-- Resumen -->
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 600; color: var(--cw-text-muted); margin-bottom: 4px;">Resumen</label>
+            <input id="editSummary" class="input-field" placeholder="Breve descripción del manual" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--cw-border);">
+          </div>
+
+          <!-- Privacy Status -->
+          <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.2);border-radius:8px">
+            <input id="editManualPrivate" type="checkbox" style="width:16px;height:16px;cursor:pointer;accent-color:var(--cw-primary)">
+            <label for="editManualPrivate" style="flex:1;font-size:12px;font-weight:600;color:var(--cw-text);cursor:pointer;margin:0">
+              🔒 Manual privado
+            </label>
+            <span style="font-size:11px;color:var(--cw-text-muted);white-space:nowrap">Solo compartible</span>
+          </div>
+
+          <!-- Pasos -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--cw-text-muted); margin: 0;">Pasos del manual</label>
+              <button id="addStepBtn" class="small-btn" style="font-size: 12px; padding: 6px 12px;">+ Añadir paso</button>
+            </div>
+            <div id="editStepsList" style="display: flex; flex-direction: column; gap: 12px; background: var(--cw-surface-dark, rgba(0,0,0,0.05)); padding: 12px; border-radius: 8px; min-height: 100px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div style="border-top: 1px solid var(--cw-border); padding-top: 16px; margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;">
+        <button id="exportCurrentBtn" class="secondary" style="padding: 10px 16px;" title="Exportar manual como PDF">📥 PDF</button>
+        <button id="shareCurrentBtn" class="secondary" style="padding: 10px 16px;" title="Copiar enlace compartible">🔗 Compartir</button>
+        <button id="emailCurrentBtn" class="secondary" style="padding: 10px 16px;" title="Enviar por email">📧 Email</button>
+        <button id="deleteManualBtn" class="secondary" style="padding: 10px 16px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">🗑️ Eliminar</button>
+        <button class="secondary" data-close style="padding: 10px 16px;">Cancelar</button>
+        <button id="saveManualBtn" class="primary" style="padding: 10px 16px;">💾 Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Modal -->
+  <div id="notificationsPanel" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notifTitle">
+    <div class="modal-content">
+      <button class="close" data-close aria-label="Cerrar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <h4 id="notifTitle">Notificaciones</h4>
+      <div id="notificationsList" class="notifications-list">No hay notificaciones.</div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-content">
+      <button class="close" data-close aria-label="Cerrar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <h4 id="helpTitle">Ayuda y atajos</h4>
+      <div class="help-content">
+        <!-- FASE 9: Botón de tour -->
+        <div style="margin-bottom: 20px; padding: 12px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+          <button id="restartTourBtn" style="background: #ff8033; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; width: 100%; transition: background 0.2s;">
+            👋 Reiniciar Tour Interactivo
+          </button>
+        </div>
+        
+        <h5>Atajos de teclado</h5>
+        <table class="keyboard-table">
+          <tr>
+            <td><kbd>/</kbd></td>
+            <td>Ir al buscador</td>
+          </tr>
+          <tr>
+            <td><kbd>↓</kbd><kbd>↑</kbd></td>
+            <td>Navegar sugerencias</td>
+          </tr>
+          <tr>
+            <td><kbd>Enter</kbd></td>
+            <td>Seleccionar sugerencia</td>
+          </tr>
+          <tr>
+            <td><kbd>Esc</kbd></td>
+            <td>Cerrar sugerencias</td>
+          </tr>
+        </table>
+        <h5>Datos mínimos por cliente</h5>
+        <ul>
+          <li>Nombre completo</li>
+          <li>Dirección de instalación</li>
+          <li>Modelo de router/decodificador</li>
+          <li>Código de cliente</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de editar categoría -->
+  <div id="editCategoryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editCategoryTitle">
+    <div class="modal-content" style="max-width:500px">
+      <button class="close" data-close aria-label="Cerrar">✕</button>
+      <h4 id="editCategoryTitle" style="margin-bottom:20px">Gestionar Categorías</h4>
+      
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <!-- Add New Category -->
+        <div style="padding:12px;background:var(--cw-surface-alt);border-radius:8px">
+          <label style="display:block;margin-bottom:8px;font-weight:600;font-size:13px">Nueva categoría</label>
+          <div style="display:flex;gap:8px">
+            <input id="newCategoryInput" type="text" class="input-field" placeholder="Nombre de la categoría" style="flex:1">
+            <button id="addCategoryBtn" type="button" class="primary small-btn">+ Agregar</button>
+          </div>
+        </div>
+        
+        <!-- Categories List -->
+        <div>
+          <label style="display:block;margin-bottom:8px;font-weight:600;font-size:13px">Categorías existentes</label>
+          <div id="categoriesList" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto"></div>
+        </div>
+        
+        <!-- Change Manual Category -->
+        <div style="padding:12px;background:linear-gradient(135deg, #fef3c7, #fef9e7);border:2px solid #f59e0b;border-radius:8px">
+          <label style="display:block;margin-bottom:8px;font-weight:600;font-size:13px">Cambiar categoría del manual actual</label>
+          <div style="display:flex;gap:8px">
+            <select id="changeManualCategorySelect" class="input-field" style="flex:1">
+              <option value="">-- Seleccionar categoría --</option>
+            </select>
+            <button id="changeManualCategoryBtn" type="button" class="primary small-btn">Cambiar</button>
+          </div>
+        </div>
+        
+        <!-- Close -->
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;border-top:1px solid var(--cw-border);padding-top:12px">
+          <button id="closeCategoryModalBtn" class="secondary small-btn" data-close>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Manual Modal -->
+  <div id="shareManualModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="shareManualTitle">
+    <div class="modal-content" style="max-width:600px;background:var(--cw-surface);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.15)">
+      <button class="close" data-close aria-label="Cerrar" style="top:16px;right:16px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      
+      <!-- HEADER -->
+      <div style="padding:28px 28px 20px 28px;border-bottom:1px solid var(--cw-border)">
+        <h4 id="shareManualTitle" style="margin:0;font-size:20px;font-weight:700;color:var(--cw-text);display:flex;align-items:center;gap:10px">🔒 Compartir Manual</h4>
+        <p style="margin:8px 0 0 0;font-size:13px;color:var(--cw-text-muted)">Comparte este manual privado con otros usuarios</p>
+      </div>
+      
+      <!-- CONTENT -->
+      <div style="padding:28px;display:flex;flex-direction:column;gap:20px">
+        <input id="shareManualId" type="hidden" value="">
+        
+        <!-- Compartir con Usuario -->
+        <div style="background:var(--cw-bg);border:1px solid var(--cw-border);border-radius:8px;padding:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--cw-text);margin-bottom:12px;text-transform:uppercase">👤 Compartir con Usuario</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <input id="shareManualEmail" type="email" placeholder="correo@ejemplo.com" style="flex:1;min-width:200px;padding:10px;border:1px solid var(--cw-border);border-radius:6px;font-size:12px;background:var(--cw-input-bg)">
+            <select id="shareManualPermission" style="padding:10px;border:1px solid var(--cw-border);border-radius:6px;font-size:12px;background:var(--cw-input-bg);min-width:150px">
+              <option value="viewer">👁️ Leer</option>
+              <option value="editor">✏️ Editar</option>
+              <option value="admin">👑 Admin</option>
+            </select>
+            <button id="shareManualBtn" style="padding:10px 16px;background:var(--cw-primary);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap;transition:all 0.3s">Compartir</button>
+          </div>
+          <p style="font-size:11px;color:var(--cw-text-muted);margin:0">El usuario recibirá un email con acceso al manual</p>
+        </div>
+        
+        <!-- Lista de Usuarios con Acceso -->
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--cw-text);margin-bottom:12px;text-transform:uppercase">📋 Usuarios con Acceso</div>
+          <div id="manualSharesList" style="border:1px solid var(--cw-border);border-radius:8px;background:var(--cw-bg);max-height:250px;overflow-y:auto">
+            <div style="padding:20px;text-align:center;color:var(--cw-text-muted);font-size:12px">
+              Cargando usuarios con acceso...
+            </div>
+          </div>
+        </div>
+        
+        <!-- Información -->
+        <div style="background:linear-gradient(135deg, rgba(59,130,246,0.05), rgba(99,102,241,0.05));border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:12px;font-size:11px;color:var(--cw-text-muted)">
+          <div style="margin-bottom:6px"><strong>📌 Niveles de Acceso:</strong></div>
+          <ul style="margin:0;padding-left:16px">
+            <li><strong>👁️ Leer:</strong> Solo puede ver el manual</li>
+            <li><strong>✏️ Editar:</strong> Puede ver y editar contenido</li>
+            <li><strong>👑 Admin:</strong> Control total incluyendo compartir y eliminar</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- FOOTER -->
+      <div style="padding:16px 28px;border-top:1px solid var(--cw-border);display:flex;gap:10px;justify-content:flex-end;background:rgba(0,0,0,0.01)">
+        <button class="secondary" data-close style="padding:12px 20px;border-radius:8px">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ Modal -->
+  <div id="faqModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="faqTitle">
+    <div class="modal-content">
+      <button class="close" data-close aria-label="Cerrar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <h4 id="faqTitle">Crear / Editar FAQ</h4>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="faqQuestion" class="input-field" placeholder="Pregunta (ej. ¿Cómo restablecer router?)">
+        <textarea id="faqAnswer" class="input-field" placeholder="Respuesta detallada (puedes usar HTML básico)" style="min-height:160px;font-family:inherit"></textarea>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="deleteFaqBtn" class="secondary" data-admin style="display:none">Eliminar</button>
+          <button id="saveFaqBtn" class="primary">Guardar</button>
+          <button class="secondary" data-close>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FASE 9: GUIDED TOUR OVERLAY -->
+  <div id="tourOverlay" class="tour-overlay hidden" role="presentation" aria-hidden="true">
+    <div class="tour-highlight" role="img" aria-label="Elemento destacado del tour"></div>
+    <div class="tour-tooltip" role="dialog" aria-labelledby="tourTitle" aria-describedby="tourDescription">
+      <div class="tour-header">
+        <h3 id="tourTitle"></h3>
+        <div class="tour-step-counter" role="status" aria-live="polite">
+          <span id="tourStepNumber">1</span> / <span id="tourTotalSteps">1</span>
+        </div>
+      </div>
+      <p id="tourDescription"></p>
+      <div class="tour-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Progreso del tour">
+        <div class="tour-progress-bar" id="tourProgressBar"></div>
+      </div>
+      <div class="tour-buttons" role="group" aria-label="Controles de navegación del tour">
+        <button id="tourSkipBtn" class="tour-btn secondary" title="Omitir tour (ESC)" aria-label="Omitir el tour">Omitir</button>
+        <button id="tourNextBtn" class="tour-btn primary" title="Siguiente paso (Flecha derecha / Enter)" aria-label="Ir al siguiente paso">Siguiente →</button>
+      </div>
+      <div style="font-size: 11px; color: rgba(0,0,0,0.4); margin-top: 12px; text-align: center;" role="note">
+        💡 Usa flechas ← → para navegar, ESC para omitir
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/kb-manager-pro.js"></script>
+  <script src="../js/manuals-pro.js"></script>
+  <script type="module" src="../js/app.js"></script>
+</body>
+</html>
