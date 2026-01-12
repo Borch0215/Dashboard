@@ -42,27 +42,6 @@ Usuario: admin
 
 ---
 
-## Control de Permisos del Botón "Nuevo Manual"
-
-### El botón aparece SOLO si:
-✅ El usuario tiene el permiso `create_manuals`
-
-### Cómo asignar el permiso:
-
-1. **Inicia sesión como admin**
-2. **Ve a**: Ajustes ⚙️ → Gestión de Usuarios
-3. **Tab "Roles"** → Crea o edita un rol
-4. **Marca**: `☑️ create_manuals` (Crear manuales)
-5. **Asigna el rol** a un usuario en el Tab "Usuarios"
-
-### Verificar que funciona:
-```powershell
-# En la consola del navegador (F12):
-STATE.authUser.permissions  # Debería incluir "create_manuals"
-```
-
----
-
 ## Comandos Útiles
 
 ```powershell
@@ -110,33 +89,6 @@ call-center/
 
 ---
 
-## Permisos Disponibles
-
-### Manuales
-- `view_manuals` - Ver manuales
-- `create_manuals` - **← Necesario para botón "Nuevo Manual"**
-- `edit_manuals` - Editar propios
-- `edit_all_manuals` - Editar todos
-- `delete_manuals` - Eliminar propios
-- `delete_all_manuals` - Eliminar todos
-
-### Diagramas
-- `view_diagrams` - Ver diagramas
-- `create_diagrams` - Crear diagramas
-- `edit_diagrams` - Editar propios
-- `edit_all_diagrams` - Editar todos
-- `delete_diagrams` - Eliminar propios
-- `delete_all_diagrams` - Eliminar todos
-
-### Admin
-- `view_users` - Ver usuarios
-- `create_users` - Crear usuarios
-- `manage_roles` - Gestionar roles
-- `manage_kb` - Knowledge Base Manager
-- `view_audit` - Ver auditoría
-
----
-
 ## Troubleshooting Rápido
 
 | Problema | Solución |
@@ -151,3 +103,4 @@ call-center/
 ---
 
 **Documentación completa**: Ver `INSTALACION_Y_CONFIGURACION.md`
+
